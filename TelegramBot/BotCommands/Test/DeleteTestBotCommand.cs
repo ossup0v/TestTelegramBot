@@ -4,7 +4,7 @@ namespace TelegramBot.BotCommands.Test
 {
     public class DeleteTestBotCommand : IBotCommand
     {
-        public string Key => "/deletetest";
+        public string Key => "Delete test";
 
         public string Description => "will delete exists test";
 
@@ -12,7 +12,7 @@ namespace TelegramBot.BotCommands.Test
         {
             if (context.Client.TestManager.IsTestCollectionEmpty())
             {
-                await context.SendMessage($"Your test list is empty!", $"To create test type command {new CreateTestShowBotCommand().Key}");
+                await context.SendCallbacks($"Your test list is empty \nUse to create new test", new CreateTestShowBotCommand().Key);
                 return;
             }
 

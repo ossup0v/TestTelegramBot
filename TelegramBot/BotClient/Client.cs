@@ -31,14 +31,13 @@ namespace TelegramBot.BotClient
                 .ToList());
         }
 
-        public async Task ProccessMessageInput(string input, ITelegramBotClient botClient, Update update)
+        public Task ProccessMessageInput(string input, ITelegramBotClient botClient, Update update)
         {
             _context.Fill(input, this, botClient, update);
 
             if (CommandStepsQueue.Count > 0)
             {
-                await ProcessCommandStep();
-                return;
+                return ProcessCommandStep(); 
             }
 
             var commandKey = input;
@@ -47,17 +46,16 @@ namespace TelegramBot.BotClient
             if (command == null)
                 command = new HelpBotCommand();
 
-            await command.ExecuteAsync(_context);
+            return command.ExecuteAsync(_context);
         }
 
-        public async Task ProccessCallbackQueryInput(string input, ITelegramBotClient botClient, Update update)
+        public Task ProccessCallbackQueryInput(string input, ITelegramBotClient botClient, Update update)
         {
             _context.Fill(input, this, botClient, update);
 
             if (CommandStepsQueue.Count > 0)
             {
-                await ProcessCommandStep();
-                return;
+                return ProcessCommandStep();
             }
 
             var commandKey = input;
@@ -66,7 +64,7 @@ namespace TelegramBot.BotClient
             if (command == null)
                 command = new HelpBotCommand();
 
-            await command.ExecuteAsync(_context);
+            return command.ExecuteAsync(_context);
         }
 
         private Task ProcessCommandStep()

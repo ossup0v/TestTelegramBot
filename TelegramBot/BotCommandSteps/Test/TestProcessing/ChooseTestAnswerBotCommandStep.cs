@@ -30,7 +30,7 @@ namespace TelegramBot.BotCommandSteps.Test.TestProcessing
             }
             else
             {
-                await context.SendCallbacks($"Can't understand you. Peek one of this commands, please!"
+                await context.SendCallbacks($"Can't understand you. Peek one of this commands, please"
                     , TestConstants.ChooseAnswerArray);
             }
         }
@@ -43,7 +43,7 @@ namespace TelegramBot.BotCommandSteps.Test.TestProcessing
 
         private Task SendTestIsDone(CommandExecutionContext context)
         {
-            return context.SendMessage($"Test is done!"
+            return context.SendMessage($"Test is done"
                 , GetAnswerAndQuestionCount(context));
         }
 

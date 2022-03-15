@@ -17,7 +17,7 @@ namespace TelegramBot.BotCommands
         private readonly ILogger _logger;
 
         private long _chatId => Update?.Message?.Chat?.Id ?? Update.CallbackQuery.Message.Chat.Id;
-        private string _userName => Update?.Message?.Chat?.Username ?? Update.CallbackQuery.Message.Chat.Username;
+        private string _userName => Update?.Message?.Chat?.Username ?? Update?.CallbackQuery?.Message?.Chat?.Username ?? "John Doe";
 
         public CommandExecutionContext(ILogger logger)
         {
@@ -39,6 +39,7 @@ namespace TelegramBot.BotCommands
             _logger.LogInformation($"Send message to {_chatId} - {_userName} message:\n" + message);
             return BotClient.SendTextMessageAsync(
                     chatId: _chatId,
+                    disableNotification: true,
                     text: message);
         }
 
@@ -48,26 +49,29 @@ namespace TelegramBot.BotCommands
             _logger.LogInformation($"Send message to {_chatId} - {_userName} message:\n" + text);
             return BotClient.SendTextMessageAsync(
                     chatId: _chatId,
+                    disableNotification: true,
                     text: text);
         }
 
         public Task SendCallbacks(string text, params string[] callbacks)
         {
-            var buttonCallbackData = callbacks.Select(x=> InlineKeyboardButton.WithCallbackData(x.Replace("!",""))).ToArray();
+            text = text.Replace("-", "\\-");
+            var buttonCallbackData = callbacks.Select(x => InlineKeyboardButton.WithCallbackData(x.Replace("!", "\\!").Replace("-", "\\-"))).ToArray();
+            _logger.LogInformation($"Send message to {_chatId} - {_userName} message:\n" + text + "\nand callbacks \n" + String.Join("\n", callbacks));
 
             return BotClient.SendTextMessageAsync(
                     chatId: _chatId,
                     text: text,
                     parseMode: ParseMode.MarkdownV2,
                     disableNotification: true,
-                    //replyToMessageId: Update.Message.MessageId,
                     replyMarkup: new InlineKeyboardMarkup(buttonCallbackData)
             );
         }
 
         public Task SendCallbacks(string text, params (string, string)[] callbacks)
         {
-            var buttonCallbackData = callbacks.Select(x => new InlineKeyboardButton[] { InlineKeyboardButton.WithCallbackData(x.Item1), InlineKeyboardButton.WithCallbackData(x.Item2, x.Item1)} );
+            var buttonCallbackData = callbacks.Select(x => new InlineKeyboardButton[] { InlineKeyboardButton.WithCallbackData(x.Item1), InlineKeyboardButton.WithCallbackData(x.Item2, x.Item1) });
+            _logger.LogInformation($"Send message to {_chatId} - {_userName} message:\n" + text + "\nand callbacks\n" + String.Join("\n", callbacks.Select(x=>x.Item1 + " " + x.Item2)));
 
             return BotClient.SendTextMessageAsync(
                     chatId: _chatId,
@@ -77,6 +81,38 @@ namespace TelegramBot.BotCommands
                     //replyToMessageId: Update.Message.MessageId,
                     replyMarkup: new InlineKeyboardMarkup(buttonCallbackData)
             );
+        }
+
+        public async Task UpdateCallback(string text, params string[] callbacks)
+        {
+            //ReplyKeyboardMarkup replyKeyboardMarkup = new(new[]
+            //{
+            //    new KeyboardButton[] { "One", "Two" },
+            //    new KeyboardButton[] { "Three", "Four", "ЭЭ" },
+            //})
+            //{
+            //    ResizeKeyboard = true
+            //};
+            ReplyKeyboardMarkup replyKeyboardMarkup = new(new[]
+            {
+                new KeyboardButton[] { "Help me", "Call me ☎️" },
+            })
+            {
+                ResizeKeyboard = true
+            };
+
+            //var chatId = (ChatId)Update.Message.Chat;
+
+            //return Task.CompletedTask;
+
+            await BotClient.EditMessageTextAsync(Update?.ChosenInlineResult?.InlineMessageId, text);
+            //Update.EditedMessage.Text = text;
+            //Update.CallbackQuery.Message.Text = text;
+
+            //return BotClient.SendTextMessageAsync(
+            //        chatId: _chatId,
+            //        text: "Removing keyboard",
+            //        replyMarkup: replyKeyboardMarkup);
         }
 
         public void RemoveCommandStep(IBotCommandStep step)

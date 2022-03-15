@@ -4,7 +4,7 @@ namespace TelegramBot.BotCommands.Test
 {
     public class ChooseTestBotCommand : IBotCommand
     {
-        public string Key => "/choosetest";
+        public string Key => "Choose test";
 
         public string Description => "showing tests and will start choose test";
 
@@ -12,7 +12,7 @@ namespace TelegramBot.BotCommands.Test
         {
             if (context.Client.TestManager.IsTestCollectionEmpty())
             {
-                return context.SendMessage($"Your test list is empty!", $"To create test type command {new CreateTestShowBotCommand().Key}");
+                return context.SendCallbacks($"Your test list is empty \nUse to create new test", new CreateTestShowBotCommand().Key);
             }
             
             context.Client.CommandStepsQueue.Add(new ChooseTestBotCommandStep());

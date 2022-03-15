@@ -13,7 +13,7 @@ namespace TelegramBot.BotCommandSteps.Test.TestProcessing
 
                 if (context.Client.TestManager.CurrentTest.GetTestSteps().Count == 0)
                 { 
-                    await context.SendMessage($"Test {context.Client.TestManager.CurrentTest.Name} is empty, you already done it !)");
+                    await context.SendMessage($"Test {context.Client.TestManager.CurrentTest.Name} is empty, you already done it !");
                     return;
                 }
 

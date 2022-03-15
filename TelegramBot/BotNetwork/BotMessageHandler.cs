@@ -50,7 +50,7 @@ namespace TelegramBot.BotNetwork
             if (!_clients.ContainsKey(chatId))
                 _clients.Add(chatId, new Client(chatId, _logger, AllCommandsHelper.BotCommands));
 
-            _logger.LogInformation($"Received a '{messageText}' message in chat {chatId} an user name: {chat.Username}");
+            _logger.LogInformation($"Received a '{messageText}' message in chat {chatId}, user name: {chat.Username}");
 
             return _clients[chatId].ProccessMessageInput(messageText, botClient, update);
         }
@@ -61,27 +61,27 @@ namespace TelegramBot.BotNetwork
                 return Task.CompletedTask;
 
             var chatId = update.CallbackQuery.Message.Chat.Id;
-            var messageText = update.CallbackQuery.Data;
+            var data = update.CallbackQuery.Data;
             var chat = update.CallbackQuery.Message.Chat;
 
             if (!_clients.ContainsKey(chatId))
                 _clients.Add(chatId, new Client(chatId, _logger, AllCommandsHelper.BotCommands));
 
-            _logger.LogInformation($"Received a '{messageText}' message in chat {chatId} an user name: {chat.Username}");
+            _logger.LogInformation($"Received '{data}' data in chat {chatId}, user name: {chat.Username}");
 
-            return _clients[chatId].ProccessCallbackQueryInput(messageText, botClient, update);
+            return _clients[chatId].ProccessCallbackQueryInput(data, botClient, update);
         }
 
         public Task HandleError(ITelegramBotClient client, Exception exception, CancellationToken token)
         {
-            var ErrorMessage = exception switch
+            var errorMessage = exception switch
             {
                 ApiRequestException apiRequestException
                     => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
                 _ => exception.ToString()
             };
 
-            Console.WriteLine(ErrorMessage);
+            _logger.LogError(errorMessage);
 
             return Task.CompletedTask;
         }

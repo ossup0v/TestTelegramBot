@@ -10,7 +10,7 @@ namespace TelegramBot.BotCommandSteps.Test.TestCreating
             {
                 context.RemoveCommandStep(this);
                 var test = context.Client.TestManager.EndCreateNewTest();
-                await context.SendMessage($"Test with name {test.Name} added with id to share {test.Id}");
+                await context.SendMessage($"Test with name {test.Name} added with id to share", $"{test.Id}");
                 return;
             }
 

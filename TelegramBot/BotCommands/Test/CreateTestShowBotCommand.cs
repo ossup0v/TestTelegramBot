@@ -4,7 +4,7 @@ namespace TelegramBot.BotCommands.Test
 {
     public class CreateTestShowBotCommand : IBotCommand
     {
-        public string Key => "/createtest";
+        public string Key => "Create test";
 
         public string Description => "will create new test";
 

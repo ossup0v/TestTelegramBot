@@ -14,7 +14,9 @@ namespace TelegramBot.BotCommandSteps.Test.TestCreating
 
             context.RemoveCommandStep(this);
             context.AddCommandStep(new AddTestStepBotCommandStep());
-            await context.SendMessage("Type test step", "Like question - answer", "Type 'exit' for finish adding test steps");
+            await context.SendMessage("Type test step"
+                , "Like question - answer"
+                , "Type '/exit' for finish adding test steps");
         }
     }
 }

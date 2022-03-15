@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using TelegramBot.BotCommands.Attributes;
 
 namespace TelegramBot.BotCommands
 {

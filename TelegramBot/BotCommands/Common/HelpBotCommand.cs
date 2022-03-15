@@ -1,11 +1,9 @@
-﻿using TelegramBot.BotCommands.Attributes;
-
-namespace TelegramBot.BotCommands
+﻿namespace TelegramBot.BotCommands
 {
     [NotAvailableCommand]
     public class HelpBotCommand : IBotCommand
     {
-        public string Key => "/help";
+        public string Key => "Help";
 
         public string Description => "will show you all available commands";
 

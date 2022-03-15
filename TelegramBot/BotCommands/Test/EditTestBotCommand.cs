@@ -1,12 +1,11 @@
-﻿using TelegramBot.BotCommands.Attributes;
-using TelegramBot.BotCommandSteps.Test.TestEditing;
+﻿using TelegramBot.BotCommandSteps.Test.TestEditing;
 
 namespace TelegramBot.BotCommands.Test
 {
     [NotAvailableCommand]
     public sealed class EditTestBotCommand : IBotCommand
     {
-        public string Key => "/edittest";
+        public string Key => "Edit test";
 
         public string Description => "you can choose test that you will edit";
 
@@ -14,7 +13,7 @@ namespace TelegramBot.BotCommands.Test
         {
             if (context.Client.TestManager.IsTestCollectionEmpty())
             {
-                return context.SendMessage($"Your test list is empty!", $"To create test type command {new CreateTestShowBotCommand().Key}");
+                return context.SendCallbacks($"Your test list is empty \nUse to create new test", new CreateTestShowBotCommand().Key);
             }
 
             context.AddCommandStep(new ChooseTestToEditBotCommandStep());

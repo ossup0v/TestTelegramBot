@@ -4,7 +4,7 @@ namespace TelegramBot.BotCommands.Test
 {
     public sealed class ChooseSharedTestBotCommand : IBotCommand
     {
-        public string Key => "/choosesharedtest";
+        public string Key => "Choose shared test";
 
         public string Description => "choose test from other user by unic id";
 
