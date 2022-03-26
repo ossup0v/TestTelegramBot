@@ -3,8 +3,8 @@ using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using TelegramBot.BotClient;
 using TelegramBot.BotCommands;
+using TelegramBot.Domain.Domain.BotClient;
 
 namespace TelegramBot.BotNetwork
 {

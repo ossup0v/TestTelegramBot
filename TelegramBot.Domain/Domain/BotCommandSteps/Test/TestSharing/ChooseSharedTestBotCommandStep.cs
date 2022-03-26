@@ -1,11 +1,10 @@
 ﻿using TelegramBot.BotCommands;
-using TelegramBot.BotCommands.Test;
+using TelegramBot.BotCommandSteps;
 using TelegramBot.BotCommandSteps.Test.TestProcessing;
-using TelegramBot.Database;
-using TelegramBot.Database.DTO;
-using TelegramBot.Test;
+using TelegramBot.InternalAPI.Databases.DTO;
+using TelegramBot.InternalAPI.Domain;
 
-namespace TelegramBot.BotCommandSteps.Test.TestSharing
+namespace TelegramBot.Domain.Domain.BotCommandSteps.Test.TestSharing
 {
     public sealed class ChooseSharedTestBotCommandStep : IBotCommandStep
     {
@@ -19,7 +18,7 @@ namespace TelegramBot.BotCommandSteps.Test.TestSharing
                 return;
             }
 
-            var targetTest = await TestDatabaseMongo.Instance.GetTestById(id);
+            var targetTest = await TestDatabaseWrapper.Database.GetTestById(id);
 
             if (targetTest is null)
             {

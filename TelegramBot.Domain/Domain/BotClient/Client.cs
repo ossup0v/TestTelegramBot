@@ -3,10 +3,10 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using TelegramBot.BotCommands;
 using TelegramBot.BotCommandSteps;
-using TelegramBot.Database;
-using TelegramBot.Test;
+using TelegramBot.Domain.Domain.Test;
+using TelegramBot.InternalAPI.Domain;
 
-namespace TelegramBot.BotClient
+namespace TelegramBot.Domain.Domain.BotClient
 {
     public sealed class Client
     {
@@ -23,12 +23,12 @@ namespace TelegramBot.BotClient
             Localizator = new Localizator(logger, GetLanguage);
             _availableCommands = availableCommands;
             TestManager = new TestManager(chatIdOwner,
-                TestDatabaseMongo.Instance
+                TestDatabaseWrapper.Database
                 .GetAllClientTests(chatIdOwner)
                 .Result
-                .Select(x => new TestCollection(x.Name, 
+                .Select(x => new TestCollection(x.Name,
                     x.Id,
-                    x.Steps.Select(x => new TestStep 
+                    x.Steps.Select(x => new TestStep
                     { Answer = x.Answer, Question = x.Question })
                     .ToList()))
                 .ToList());
@@ -50,7 +50,7 @@ namespace TelegramBot.BotClient
 
             if (CommandStepsQueue.Count > 0)
             {
-                return ProcessCommandStep(); 
+                return ProcessCommandStep();
             }
 
             var commandKey = input;

@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
-namespace TelegramBot.Database.DTO
+namespace TelegramBot.InternalAPI.Databases.DTO
 {
     public class TestCollectionData
     {

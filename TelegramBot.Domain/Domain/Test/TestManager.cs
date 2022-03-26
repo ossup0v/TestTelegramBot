@@ -1,7 +1,7 @@
-﻿using TelegramBot.Database;
-using TelegramBot.Database.DTO;
+﻿using TelegramBot.InternalAPI.Databases.DTO;
+using TelegramBot.InternalAPI.Domain;
 
-namespace TelegramBot.Test
+namespace TelegramBot.Domain.Domain.Test
 {
     public sealed class TestManager
     {
@@ -48,7 +48,7 @@ namespace TelegramBot.Test
                 return _newTest;
 
             Tests.Add(_newTest.Name, _newTest);
-            TestDatabaseMongo.Instance.AddTest(new TestCollectionData
+            TestDatabaseWrapper.Database.AddTest(new TestCollectionData
             {
                 ChatIdOwner = _chatIdOwner,
                 Id = _newTest.Id,
@@ -61,7 +61,7 @@ namespace TelegramBot.Test
         public void RemoveTest(string testToDelete)
         {
             Tests.Remove(testToDelete);
-            TestDatabaseMongo.Instance.DeleteTest(testToDelete);
+            TestDatabaseWrapper.Database.DeleteTest(testToDelete);
         }
     }
 }

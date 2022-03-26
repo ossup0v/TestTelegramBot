@@ -5,7 +5,13 @@ VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TelegramBot", "TelegramBot\TelegramBot.csproj", "{6AEE6EB4-C3E0-4795-AC4E-3DEB4D241CAB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelegramBot.Database", "TelegramBot.Database\TelegramBot.Database.csproj", "{C052F281-D02A-4554-9610-FA29B5249EF4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TelegramBot.Database", "TelegramBot.Database\TelegramBot.Database.csproj", "{C052F281-D02A-4554-9610-FA29B5249EF4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelegramBot.InternalAPI", "TelegramBot.InternalAPI\TelegramBot.InternalAPI.csproj", "{7CAF2787-E8FD-4942-95CB-CF7FDFF5EC48}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelegramBot.Domain", "TelegramBot.Domain\TelegramBot.Domain.csproj", "{5287E448-E89C-4F84-BD57-CC20332C588D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelegramBot.Common", "TelegramBot.Common\TelegramBot.Common.csproj", "{6CF8CB00-45E0-4BF8-B059-37B0B1E60BAA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +27,18 @@ Global
 		{C052F281-D02A-4554-9610-FA29B5249EF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C052F281-D02A-4554-9610-FA29B5249EF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C052F281-D02A-4554-9610-FA29B5249EF4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CAF2787-E8FD-4942-95CB-CF7FDFF5EC48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CAF2787-E8FD-4942-95CB-CF7FDFF5EC48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CAF2787-E8FD-4942-95CB-CF7FDFF5EC48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CAF2787-E8FD-4942-95CB-CF7FDFF5EC48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5287E448-E89C-4F84-BD57-CC20332C588D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5287E448-E89C-4F84-BD57-CC20332C588D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5287E448-E89C-4F84-BD57-CC20332C588D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5287E448-E89C-4F84-BD57-CC20332C588D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6CF8CB00-45E0-4BF8-B059-37B0B1E60BAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6CF8CB00-45E0-4BF8-B059-37B0B1E60BAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6CF8CB00-45E0-4BF8-B059-37B0B1E60BAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6CF8CB00-45E0-4BF8-B059-37B0B1E60BAA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

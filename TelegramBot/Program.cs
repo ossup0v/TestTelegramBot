@@ -1,5 +1,8 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
+using TelegramBot.BotCommands;
+using TelegramBot.Database;
+using TelegramBot.Domain;
 
 namespace TelegramBot
 {
@@ -13,6 +16,8 @@ namespace TelegramBot
                 .AddFilter("Microsoft", LogLevel.Warning)
                 .AddConsole();
             });
+
+            TestDatabaseWrapper.Init(new TestDatabaseMongo());
 
             var botManager = new BotManager(loggerFactory.CreateLogger<BotManager>());
 

@@ -18,6 +18,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TelegramBot.Database\TelegramBot.Database.csproj" />
+    <ProjectReference Include="..\TelegramBot.Domain\TelegramBot.Domain.csproj" />
+    <ProjectReference Include="..\TelegramBot.InternalAPI\TelegramBot.InternalAPI.csproj" />
   </ItemGroup>
 
 </Project>

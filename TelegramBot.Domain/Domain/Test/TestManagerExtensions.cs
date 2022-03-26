@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using TelegramBot.Test;
+using TelegramBot.Domain.Domain.Test;
 
 public static class TestManagerExtensions
 {

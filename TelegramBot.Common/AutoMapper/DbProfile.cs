@@ -1,11 +1,6 @@
 ﻿using AutoMapper;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TelegramBot.Database.DTO;
-using TelegramBot.Test;
+using TelegramBot.InternalAPI.Databases.DTO;
+using TelegramBot.InternalAPI.Domain;
 
 namespace TelegramBot.AutoMapper
 {

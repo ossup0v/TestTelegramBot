@@ -3,8 +3,8 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using TelegramBot.BotClient;
 using TelegramBot.BotCommandSteps;
+using TelegramBot.Domain.Domain.BotClient;
 
 namespace TelegramBot.BotCommands
 {
@@ -18,6 +18,7 @@ namespace TelegramBot.BotCommands
 
         private long _chatId => Update?.Message?.Chat?.Id ?? Update.CallbackQuery.Message.Chat.Id;
         private string _userName => Update?.Message?.Chat?.Username ?? Update?.CallbackQuery?.Message?.Chat?.Username ?? "John Doe";
+        private int _messageId => Update?.Message?.MessageId ?? Update?.CallbackQuery?.Message?.MessageId ?? 0;
 
         public CommandExecutionContext(ILogger logger)
         {
@@ -68,8 +69,30 @@ namespace TelegramBot.BotCommands
             );
         }
 
+        public Task EditKeyboard(string message, params string[] textButtons)
+        {
+            _logger.LogInformation($"User: {_userName} recieved keyboard: \'{message}\' with buttons:{Environment.NewLine}{string.Join(Environment.NewLine, textButtons)}");
+            List<List<InlineKeyboardButton>> buttons = new List<List<InlineKeyboardButton>>();
+
+            foreach (var textButton in textButtons)
+            {
+                List<InlineKeyboardButton> rowButtons = new List<InlineKeyboardButton>();
+                InlineKeyboardButton button = InlineKeyboardButton.WithCallbackData(textButton);
+                rowButtons.Add(button);
+                buttons.Add(rowButtons);
+            }
+            var inlineKeyboard = new InlineKeyboardMarkup(buttons);
+            return BotClient.EditMessageTextAsync(
+                    chatId: _chatId,
+                    text: message,
+                    messageId: _messageId,
+                    replyMarkup: inlineKeyboard
+                    );
+        }
+
         public Task SendCallbacks(string text, params string[] callbacks)
         {
+            return EditKeyboard(text, callbacks);
             text = text.Replace("-", "\\-");
             var buttonCallbackData = callbacks.Select(x => InlineKeyboardButton.WithCallbackData(x/*.Replace("!", "\\!").Replace("-", "\\-")*/)).ToArray();
             _logger.LogInformation($"Send message to {_chatId} - {_userName} message:" + Environment.NewLine + text + Environment.NewLine + "and callbacks " + Environment.NewLine + String.Join(Environment.NewLine, callbacks));

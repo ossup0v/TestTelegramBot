@@ -1,9 +1,10 @@
 ﻿using MongoDB.Driver;
-using TelegramBot.Database.DTO;
+using TelegramBot.InternalAPI.Databases;
+using TelegramBot.InternalAPI.Databases.DTO;
 
 namespace TelegramBot.Database
 {
-    public class TestDatabaseMongo
+    public class TestDatabaseMongo : ITestDatabase
     {
         public readonly static TestDatabaseMongo Instance = new TestDatabaseMongo();
 
@@ -45,9 +46,9 @@ namespace TelegramBot.Database
             return _testsCollection.Find(x => x.ChatIdOwner == chatClientOwner).ToListAsync();
         }
 
-        public void DeleteTest(string testToDelete)
+        public Task DeleteTest(string testToDelete)
         {
-            _testsCollection.DeleteOneAsync(x => x.Name == testToDelete);
+            return _testsCollection.DeleteOneAsync(x => x.Name == testToDelete);
         }
     }
 }

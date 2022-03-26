@@ -1,4 +1,4 @@
-﻿namespace TelegramBot.Test
+﻿namespace TelegramBot.InternalAPI.Domain
 {
     public sealed class TestCollection
     {
@@ -18,7 +18,7 @@
         }
 
         public void AddStep(TestStep step)
-        { 
+        {
             _steps.Add(step);
         }
 
@@ -43,8 +43,8 @@
             }
         }
 
-        public string GetAnswer() => _steps[_currentStep].Answer ?? String.Empty;
-        public string GetQuestion() => _steps[_currentStep].Question ?? String.Empty;
+        public string GetAnswer() => _steps[_currentStep].Answer ?? string.Empty;
+        public string GetQuestion() => _steps[_currentStep].Question ?? string.Empty;
         public int GetCorrectAnswerCount() => _correctAnswerCount;
         public int GetAllQuestionCount() => _steps.Count;
 
@@ -55,7 +55,7 @@
         }
 
         public IReadOnlyList<TestStep> GetTestSteps()
-        { 
+        {
             return _steps;
         }
     }
