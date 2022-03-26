@@ -43,16 +43,16 @@ namespace TelegramBot.BotNetwork
             if (update.Message!.Type != MessageType.Text)
                 return Task.CompletedTask;
 
-            var chatId = update.Message.Chat.Id;
+            var userId = update.Message.From?.Id ?? 0;
             var messageText = update.Message.Text;
             var chat = update.Message.Chat;
 
-            if (!_clients.ContainsKey(chatId))
-                _clients.Add(chatId, new Client(chatId, _logger, AllCommandsHelper.BotCommands));
+            if (!_clients.ContainsKey(userId))
+                _clients.Add(userId, new Client(userId, _logger, AllCommandsHelper.BotCommands));
 
-            _logger.LogInformation($"Received a '{messageText}' message in chat {chatId}, user name: {chat.Username}");
+            _logger.LogInformation($"Received a '{messageText}' message from user id: {userId}, user name: {chat.Username}");
 
-            return _clients[chatId].ProccessMessageInput(messageText, botClient, update);
+            return _clients[userId].ProccessMessageInput(messageText, botClient, update);
         }
 
         private Task ProcessCallbackQuery(ITelegramBotClient botClient, Update update, CancellationToken token) 
@@ -60,16 +60,16 @@ namespace TelegramBot.BotNetwork
             if (update.Type != UpdateType.CallbackQuery)
                 return Task.CompletedTask;
 
-            var chatId = update.CallbackQuery.Message.Chat.Id;
+            var userId = update.CallbackQuery.From?.Id ?? 0;
             var data = update.CallbackQuery.Data;
             var chat = update.CallbackQuery.Message.Chat;
 
-            if (!_clients.ContainsKey(chatId))
-                _clients.Add(chatId, new Client(chatId, _logger, AllCommandsHelper.BotCommands));
+            if (!_clients.ContainsKey(userId))
+                _clients.Add(userId, new Client(userId, _logger, AllCommandsHelper.BotCommands));
 
-            _logger.LogInformation($"Received '{data}' data in chat {chatId}, user name: {chat.Username}");
+            _logger.LogInformation($"Received '{data}' data from {userId}, user name: {chat.Username}");
 
-            return _clients[chatId].ProccessCallbackQueryInput(data, botClient, update);
+            return _clients[userId].ProccessCallbackQueryInput(data, botClient, update);
         }
 
         public Task HandleError(ITelegramBotClient client, Exception exception, CancellationToken token)

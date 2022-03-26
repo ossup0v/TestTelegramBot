@@ -12,19 +12,19 @@ namespace TelegramBot.BotCommandSteps.Test.TestCreating
             if (testToDelete == TestConstants.CancelTestDelete)
             {
                 context.RemoveCommandStep(this);
-                return context.SendMessage(context.GetLocalizedString(LocalizationConstants.DeletionTestIsCancaled));
+                return context.SendAvailableCommands(context.GetLocalizedString(LocalizationConstants.DeletionTestIsCancaled));
             }
 
             if (!context.Client.TestManager.Tests.ContainsKey(testToDelete))
             {
-                return context.SendCallbacks(
+                return context.SendReply(
                     context.GetLocalizedString(LocalizationConstants.CantFindTestWithName, testToDelete) + Environment.NewLine + context.GetLocalizedString(LocalizationConstants.ChooseOneOfThisTest)
                     , context.Client.TestManager.GetAllTestNames());
             }
 
             context.Client.TestManager.RemoveTest(testToDelete);
             context.RemoveCommandStep(this);
-            return context.SendMessage(context.GetLocalizedString(LocalizationConstants.TestSuccessfullyDeleted, testToDelete));
+            return context.SendAvailableCommands(context.GetLocalizedString(LocalizationConstants.TestSuccessfullyDeleted, testToDelete));
         }
     }
 }

@@ -15,7 +15,7 @@ namespace TelegramBot.BotCommands
         public Task ExecuteAsync(CommandExecutionContext context)
         {
             context.AddCommandStep(new ChooseTargerLanguageBotCommandStep());
-            return context.SendCallbacksInCulomn(context.GetLocalizedString(LocalizationConstants.ShowAllAvailableLanguagesStr), LocalizationConstants.AvailableLanguages);
+            return context.SendReplyInColmn(context.GetLocalizedString(LocalizationConstants.ShowAllAvailableLanguagesStr), LocalizationConstants.AvailableLanguages);
         }
 
         public bool IsCanExecute(CommandExecutionContext context)

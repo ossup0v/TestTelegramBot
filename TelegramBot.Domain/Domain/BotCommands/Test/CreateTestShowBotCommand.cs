@@ -15,7 +15,7 @@ namespace TelegramBot.BotCommands.Test
         public Task ExecuteAsync(CommandExecutionContext context)
         {
             context.Client.CommandStepsQueue.Add(new CreateNewTestBotCommandStep());
-            return context.SendMessage(context.GetLocalizedString(LocalizationConstants.TypeNameOfNewTest));
+            return context.SendReply(context.GetLocalizedString(LocalizationConstants.TypeNameOfNewTest));
         }
 
         public bool IsCanExecute(CommandExecutionContext context)

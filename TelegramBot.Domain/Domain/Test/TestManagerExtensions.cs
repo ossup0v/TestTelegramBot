@@ -3,9 +3,11 @@ using TelegramBot.Domain.Domain.Test;
 
 public static class TestManagerExtensions
 {
-    public static string[] GetAllTestNames(this TestManager manager)
+    public static string[] GetAllTestNames(this TestManager manager, params string[] others)
     {
-        return manager.Tests.Select(x => x.Key).ToArray();
+        var testNames = manager.Tests.Select(x => x.Key).ToList();
+        testNames.AddRange(others);
+        return testNames.ToArray();
     }
 
     public static bool IsTestCollectionEmpty(this TestManager manager)

@@ -13,9 +13,10 @@ namespace TelegramBot.BotCommandSteps.Test.TestCreating
 
             context.RemoveCommandStep(this);
             context.AddCommandStep(new AddTestStepBotCommandStep());
-            return context.SendMessage(context.GetLocalizedString(LocalizationConstants.TypeTestSteps)
-                , context.GetLocalizedString(LocalizationConstants.LooksLikeQuestionAnswer)
-                , context.GetLocalizedString(LocalizationConstants.TypeExitForFinishAddingTestSteps));
+            return context.SendReply(context.GetLocalizedString(LocalizationConstants.TypeTestSteps) + Environment.NewLine +
+                 context.GetLocalizedString(LocalizationConstants.LooksLikeQuestionAnswer) + Environment.NewLine +
+                 context.GetLocalizedString(LocalizationConstants.TypeExitForFinishAddingTestSteps)
+                 , context.GetLocalizedString(LocalizationConstants.Done));
         }
     }
 }

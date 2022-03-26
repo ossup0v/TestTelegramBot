@@ -73,8 +73,8 @@ public class Localizator
             },
             [LocalizationConstants.TypeExitForFinishAddingTestSteps] = new Dictionary<string, string>
             {
-                ["en"] = "Type /exit for leave adding test steps",
-                ["ru"] = "Напишите /exit для завершение добавления новых шагов теста"
+                ["en"] = "Push done if you done",
+                ["ru"] = "нажмите готово, когда закончите"
             },
             [LocalizationConstants.ChooseTestThatYouWillDelete] = new Dictionary<string, string>
             {
@@ -149,7 +149,7 @@ public class Localizator
             [LocalizationConstants.CantFindTestWithSharedId] = new Dictionary<string, string>
             {
                 ["en"] = "Can't find shared test with id {0}",
-                ["ru"] = "Ну получилось найти тест с id {0}"
+                ["ru"] = "Не получилось найти тест с id {0}"
             },
             [LocalizationConstants.CantUnderstandYouPeekOneOfThisCommands] = new Dictionary<string, string>
             {
@@ -170,6 +170,11 @@ public class Localizator
             {
                 ["en"] = "Don't know",
                 ["ru"] = "Не знаю"
+            },
+            [LocalizationConstants.Done] = new Dictionary<string, string>
+            {
+                ["en"] = "Done",
+                ["ru"] = "Готово"
             }
         };
 

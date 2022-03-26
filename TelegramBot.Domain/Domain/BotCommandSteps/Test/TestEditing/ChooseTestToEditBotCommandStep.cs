@@ -10,7 +10,7 @@ namespace TelegramBot.BotCommandSteps.Test.TestEditing
 
             if (context.Client.TestManager.IsContainsTest(testToEdit) is false)
             {
-                return context.SendCallbacks(
+                return context.SendReply(
                     context.GetLocalizedString(LocalizationConstants.CantFindTestWithName, testToEdit) + Environment.NewLine + context.GetLocalizedString(LocalizationConstants.ChooseOneOfThisTest)
                     , context.Client.TestManager.GetAllTestNames());
             }

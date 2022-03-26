@@ -17,14 +17,14 @@ namespace TelegramBot.BotCommands.Test
         {
             if (context.Client.TestManager.IsTestCollectionEmpty())
             {
-                return context.SendCallbacks(context.GetLocalizedString(LocalizationConstants.TestListIsEmpty)
+                return context.SendReply(context.GetLocalizedString(LocalizationConstants.TestListIsEmpty)
                     , context.GetLocalizedString(LocalizationConstants.UseToCreateNewTest)
                     , new CreateTestShowBotCommand().Keys[context.Client.GetLanguage()]);
             }
 
             context.AddCommandStep(new ChooseTestToEditBotCommandStep());
 
-            return context.SendCallbacks(context.GetLocalizedString(LocalizationConstants.ChooseTestThatYouWillEdit)
+            return context.SendReply(context.GetLocalizedString(LocalizationConstants.ChooseTestThatYouWillEdit)
                 , context.Client.TestManager.GetAllTestNames());
         }
 

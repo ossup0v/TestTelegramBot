@@ -13,7 +13,7 @@
 
         public Task ExecuteAsync(CommandExecutionContext context)
         {
-            return context.SendCallbacksInCulomn(context.GetLocalizedString(LocalizationConstants.AllAvailableCommandsIs), AllCommandsHelper.GetCommandKeysToShow(context));
+            return context.SendReplyInColmn(context.GetLocalizedString(LocalizationConstants.AllAvailableCommandsIs), AllCommandsHelper.GetCommandKeysToShow(context));
         }
 
         public bool IsCanExecute(CommandExecutionContext context)

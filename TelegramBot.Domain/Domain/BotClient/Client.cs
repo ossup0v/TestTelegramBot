@@ -15,16 +15,16 @@ namespace TelegramBot.Domain.Domain.BotClient
         public List<IBotCommandStep> CommandStepsQueue { get; } = new List<IBotCommandStep>();
         private IReadOnlyDictionary<string, IBotCommand> _availableCommands;
         public readonly Localizator Localizator;
-        private string _targetLanguage = "en";
+        private string _targetLanguage = "ru";
 
-        public Client(long chatIdOwner, ILogger logger, IReadOnlyDictionary<string, IBotCommand> availableCommands)
+        public Client(long ownerUserId, ILogger logger, IReadOnlyDictionary<string, IBotCommand> availableCommands)
         {
             _context = new CommandExecutionContext(logger);
             Localizator = new Localizator(logger, GetLanguage);
             _availableCommands = availableCommands;
-            TestManager = new TestManager(chatIdOwner,
+            TestManager = new TestManager(ownerUserId,
                 TestDatabaseWrapper.Database
-                .GetAllClientTests(chatIdOwner)
+                .GetAllClientTests(ownerUserId)
                 .Result
                 .Select(x => new TestCollection(x.Name,
                     x.Id,

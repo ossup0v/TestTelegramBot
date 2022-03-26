@@ -10,7 +10,7 @@ namespace TelegramBot.BotCommandSteps.Test.TestProcessing
             var currentTest = context.Client.TestManager.CurrentTest;
             if (context.RawInput == context.GetLocalizedString(LocalizationConstants.ShowCorrectAnswer))
             {
-                await context.SendCallbacks(currentTest.GetAnswer(), context.GetTestStepButtons());
+                await context.SendReply(currentTest.GetAnswer(), context.GetTestStepButtons());
             }
             else if (context.RawInput == context.GetLocalizedString(LocalizationConstants.IKnow) || context.RawInput == context.GetLocalizedString(LocalizationConstants.IDontKnow))
             {
@@ -29,19 +29,19 @@ namespace TelegramBot.BotCommandSteps.Test.TestProcessing
             }
             else
             {
-                await context.SendCallbacks(context.GetLocalizedString(LocalizationConstants.CantUnderstandYouPeekOneOfThisCommands), context.GetTestStepButtons());
+                await context.SendReply(context.GetLocalizedString(LocalizationConstants.CantUnderstandYouPeekOneOfThisCommands), context.GetTestStepButtons());
             }
         }
 
         private Task SendNextTestStep(CommandExecutionContext context)
         {
-            return context.SendCallbacks(GetAnswerAndQuestionCount(context) + Environment.NewLine + context.Client.TestManager.CurrentTest.GetQuestion()
+            return context.SendReply(GetAnswerAndQuestionCount(context) + Environment.NewLine + context.Client.TestManager.CurrentTest.GetQuestion()
                 , context.GetTestStepButtons());
         }
 
         private Task SendTestIsDone(CommandExecutionContext context)
         {
-            return context.SendMessage(context.GetLocalizedString(LocalizationConstants.TestIsDone)
+            return context.SendAvailableCommands(context.GetLocalizedString(LocalizationConstants.TestIsDone)
                 , GetAnswerAndQuestionCount(context));
         }
 

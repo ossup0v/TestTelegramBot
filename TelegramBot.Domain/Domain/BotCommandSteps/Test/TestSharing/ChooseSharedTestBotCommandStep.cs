@@ -34,7 +34,7 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.Test.TestSharing
 
             context.RemoveCommandStep(this);
 
-            await context.SendCallbacks(context.Client.TestManager.CurrentTest.GetQuestion()
+            await context.SendReply(context.Client.TestManager.CurrentTest.GetQuestion()
                 , context.GetTestStepButtons());
 
             context.AddCommandStep(new ChooseTestAnswerBotCommandStep());
@@ -43,7 +43,7 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.Test.TestSharing
         private Task CantFindTest(CommandExecutionContext context)
         {
             context.RemoveCommandStep(this);
-            return context.SendMessage(context.GetLocalizedString(LocalizationConstants.CantFindTestWithSharedId, context.RawInput));
+            return context.SendAvailableCommands(context.GetLocalizedString(LocalizationConstants.CantFindTestWithSharedId, context.RawInput));
         }
     }
 }

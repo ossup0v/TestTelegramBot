@@ -13,7 +13,7 @@
 
         public Task ExecuteAsync(CommandExecutionContext context)
         {
-            return context.SendMessage(context.GetLocalizedString(LocalizationConstants.NameOfTestAlreadyExists, "ewqewq"));
+            return context.SendReply("test", "1","2","3");
         }
 
         public bool IsCanExecute(CommandExecutionContext context)

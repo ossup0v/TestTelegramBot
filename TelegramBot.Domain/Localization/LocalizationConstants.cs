@@ -35,4 +35,5 @@
     public const string ShowCorrectAnswer = "ShowCorrectAnswer";
     public const string IKnow = "IKnow";
     public const string IDontKnow = "IDontKnow";
+    public const string Done = "Done";
 }

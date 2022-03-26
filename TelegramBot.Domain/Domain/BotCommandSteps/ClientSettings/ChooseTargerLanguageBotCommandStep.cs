@@ -8,12 +8,12 @@ namespace TelegramBot.BotCommandSteps.ClientSettings
         {
             if (LocalizationConstants.AvailableLanguages.Contains(context.RawInput) is false)
             {
-                return context.SendCallbacksInCulomn(context.GetLocalizedString(LocalizationConstants.ShowAllAvailableLanguagesStr), LocalizationConstants.AvailableLanguages);
+                return context.SendReplyInColmn(context.GetLocalizedString(LocalizationConstants.ShowAllAvailableLanguagesStr), LocalizationConstants.AvailableLanguages);
             }
 
             context.Client.ChangeTargetLanguage(context.RawInput);
             context.RemoveCommandStep(this);
-            return context.SendMessage(context.GetLocalizedString(LocalizationConstants.SetTargetLanguageSuccess));
+            return context.SendAvailableCommands(context.GetLocalizedString(LocalizationConstants.SetTargetLanguageSuccess));
         }
     }
 }

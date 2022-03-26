@@ -17,11 +17,11 @@ namespace TelegramBot.BotCommandSteps.Test.TestProcessing
                 }
 
                 context.AddCommandStep(new ChooseTestAnswerBotCommandStep());
-                return context.SendCallbacks(context.Client.TestManager.CurrentTest.GetQuestion(), context.GetTestStepButtons());
+                return context.SendReply(context.Client.TestManager.CurrentTest.GetQuestion(), context.GetTestStepButtons());
             }
             else
             {
-                return context.SendCallbacks(
+                return context.SendReply(
                     context.GetLocalizedString(LocalizationConstants.CantFindTestWithName, context.RawInput) + Environment.NewLine + context.GetLocalizedString(LocalizationConstants.ChooseOneOfThisTest)
                     , context.Client.TestManager.GetAllTestNames());
             }

@@ -21,13 +21,13 @@ namespace TelegramBot.BotCommands.Test
         {
             if (context.Client.TestManager.IsTestCollectionEmpty())
             {
-                return context.SendCallbacks(context.GetLocalizedString(LocalizationConstants.TestListIsEmpty)
+                return context.SendReply(context.GetLocalizedString(LocalizationConstants.TestListIsEmpty)
                     , context.GetLocalizedString(LocalizationConstants.UseToCreateNewTest)
                     , new CreateTestShowBotCommand().Keys[context.Client.GetLanguage()]);
             }
 
             context.Client.CommandStepsQueue.Add(new ShowTestIdToShareBotCommandStep());
-            return context.SendCallbacks(context.GetLocalizedString(LocalizationConstants.ChooseTestThatYouWillShare)
+            return context.SendReply(context.GetLocalizedString(LocalizationConstants.ChooseTestThatYouWillShare)
                 , context.Client.TestManager.GetAllTestNames());
         }
 
