@@ -3,17 +3,17 @@ using TelegramBot.InternalAPI.Domain;
 
 namespace TelegramBot.Domain.Domain.Test
 {
-    public sealed class TestManager
+    public sealed class CardTestManager
     {
         public TestCollection CurrentTest = default;
         public Dictionary<string, TestCollection> Tests = new();
 
         private TestCollection _newTest = null;
-        private readonly long _chatIdOwner;
+        private readonly long _userIdOwner;
 
-        public TestManager(long chatIdOwner, List<TestCollection> tests)
+        public CardTestManager(long userIdOwner, List<TestCollection> tests)
         {
-            _chatIdOwner = chatIdOwner;
+            _userIdOwner = userIdOwner;
             Tests = tests.ToDictionary(x => x.Name, x => x);
         }
 
@@ -50,7 +50,7 @@ namespace TelegramBot.Domain.Domain.Test
             Tests.Add(_newTest.Name, _newTest);
             TestDatabaseWrapper.Database.AddTest(new TestCollectionData
             {
-                ChatIdOwner = _chatIdOwner,
+                ChatIdOwner = _userIdOwner,
                 Id = _newTest.Id,
                 Name = _newTest.Name,
                 Steps = _newTest.GetTestSteps().Select(x => new TestStepData() { Answer = x.Answer, Question = x.Question }).ToArray(),

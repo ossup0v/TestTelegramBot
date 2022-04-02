@@ -3,6 +3,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using TelegramBot.BotCommands;
 using TelegramBot.BotCommandSteps;
+using TelegramBot.Domain.Domain.BotCommands.Common;
 using TelegramBot.Domain.Domain.Test;
 using TelegramBot.InternalAPI.Domain;
 
@@ -11,7 +12,7 @@ namespace TelegramBot.Domain.Domain.BotClient
     public sealed class Client
     {
         private readonly CommandExecutionContext _context;
-        public TestManager TestManager { get; init; }
+        public CardTestManager TestManager { get; init; }
         public List<IBotCommandStep> CommandStepsQueue { get; } = new List<IBotCommandStep>();
         private IReadOnlyDictionary<string, IBotCommand> _availableCommands;
         public readonly Localizator Localizator;
@@ -22,7 +23,7 @@ namespace TelegramBot.Domain.Domain.BotClient
             _context = new CommandExecutionContext(logger);
             Localizator = new Localizator(logger, GetLanguage);
             _availableCommands = availableCommands;
-            TestManager = new TestManager(ownerUserId,
+            TestManager = new CardTestManager(ownerUserId,
                 TestDatabaseWrapper.Database
                 .GetAllClientTests(ownerUserId)
                 .Result

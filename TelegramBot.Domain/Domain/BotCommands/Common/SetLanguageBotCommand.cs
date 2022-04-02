@@ -1,7 +1,9 @@
 ﻿using TelegramBot.BotCommandSteps.ClientSettings;
+using TelegramBot.Domain.Domain.BotCommands.Common;
 
 namespace TelegramBot.BotCommands
 {
+    [NotAvailableCommand]
     public sealed class SetLanguageBotCommand : IBotCommand
     {
         public Dictionary<string, string> Keys => new Dictionary<string, string>

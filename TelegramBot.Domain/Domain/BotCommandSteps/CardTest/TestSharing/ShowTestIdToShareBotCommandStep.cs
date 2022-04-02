@@ -18,7 +18,7 @@ namespace TelegramBot.BotCommandSteps.Test.TestSharing
             var test = context.Client.TestManager.Tests[testToShareName];
 
             context.RemoveCommandStep(this);
-            return context.SendAvailableCommands(context.GetLocalizedString(LocalizationConstants.TestIdIs), test.Id.ToString());
+            return context.SendAvailableCommands(context.GetLocalizedString(LocalizationConstants.TestIdIs), $"`{test.Id}`");
         }
     }
 }

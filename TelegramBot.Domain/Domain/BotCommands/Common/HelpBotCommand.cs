@@ -1,4 +1,6 @@
-﻿namespace TelegramBot.BotCommands
+﻿using TelegramBot.Domain.Domain.BotCommands.Common;
+
+namespace TelegramBot.BotCommands
 {
     [NotAvailableCommand]
     public class HelpBotCommand : IBotCommand

@@ -1,8 +1,11 @@
 ﻿using TelegramBot.BotCommandSteps.Test.TestSharing;
+using TelegramBot.Domain.Domain.BotCommands.Common;
 using TelegramBot.Domain.Domain.BotCommandSteps.Test.TestSharing;
 
 namespace TelegramBot.BotCommands.Test
 {
+    [NotAvailableCommand]
+
     public sealed class ChooseSharedTestBotCommand : IBotCommand
     {
         public Dictionary<string, string> Keys => new Dictionary<string, string>

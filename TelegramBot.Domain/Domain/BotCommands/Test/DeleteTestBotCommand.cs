@@ -1,7 +1,9 @@
 ﻿using TelegramBot.BotCommandSteps.Test.TestCreating;
+using TelegramBot.Domain.Domain.BotCommands.Common;
 
 namespace TelegramBot.BotCommands.Test
 {
+    [NotAvailableCommand]
     public class DeleteTestBotCommand : IBotCommand
     {
         public Dictionary<string, string> Keys => new Dictionary<string, string>

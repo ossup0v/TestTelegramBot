@@ -4,9 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TelegramBot.BotCommandSteps.Test.TestSharing;
+using TelegramBot.Domain.Domain.BotCommands.Common;
 
 namespace TelegramBot.BotCommands.Test
 {
+    [NotAvailableCommand]
+
     public sealed class ShareTestBotCommand : IBotCommand
     {
         public Dictionary<string, string> Keys => new Dictionary<string, string>

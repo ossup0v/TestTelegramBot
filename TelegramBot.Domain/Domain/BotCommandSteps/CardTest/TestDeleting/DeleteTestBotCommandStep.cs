@@ -18,7 +18,8 @@ namespace TelegramBot.BotCommandSteps.Test.TestCreating
             if (!context.Client.TestManager.Tests.ContainsKey(testToDelete))
             {
                 return context.SendReply(
-                    context.GetLocalizedString(LocalizationConstants.CantFindTestWithName, testToDelete) + Environment.NewLine + context.GetLocalizedString(LocalizationConstants.ChooseOneOfThisTest)
+                    context.GetLocalizedString(LocalizationConstants.CantFindTestWithName, testToDelete)
+                    + Environment.NewLine + context.GetLocalizedString(LocalizationConstants.ChooseOneOfThisTest)
                     , context.Client.TestManager.GetAllTestNames());
             }
 

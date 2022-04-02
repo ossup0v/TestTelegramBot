@@ -59,7 +59,7 @@ namespace TelegramBot.BotCommands
             var sendedMessage = await BotClient.SendTextMessageAsync(
                     chatId: _chatId,
                     text: text,
-                    parseMode: ParseMode.MarkdownV2,
+                    parseMode: ParseMode.Markdown,
                     disableNotification: true,
                     replyMarkup: new InlineKeyboardMarkup(buttonCallbackData)
             );
@@ -77,14 +77,58 @@ namespace TelegramBot.BotCommands
                     messageId: _userMessageId);
         }
 
+        public async Task SendReply(string titleText, int countInRow, params string[] textButtons)
+        {
+            var result = new List<List<InlineKeyboardButton>>(textButtons.Length / countInRow);
+
+            var rowCount = 0;
+            var columnCount = -1;
+            foreach (var button in textButtons)
+            {
+                if (rowCount % countInRow == 0)
+                {
+                    result.Add(new List<InlineKeyboardButton>(countInRow));
+                    columnCount++;
+                }
+
+                result[columnCount].Add(InlineKeyboardButton.WithCallbackData(button, $"{rowCount % countInRow}:{columnCount}"));
+                rowCount++;
+            }
+
+            _logger.LogInformation($"Send message to {_chatId} - {_userName} message:" + Environment.NewLine + titleText + Environment.NewLine + "and callbacks" + Environment.NewLine + String.Join(Environment.NewLine, textButtons));
+
+            try
+            {
+                var sendedMessage = await BotClient.EditMessageTextAsync(
+                            chatId: _chatId,
+                            text: titleText,
+                            messageId: _lastSendedMessageId,
+                            replyMarkup: new InlineKeyboardMarkup(result),
+                            parseMode: ParseMode.Markdown
+                            );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+            }
+            //var sendedMessage = await BotClient.SendTextMessageAsync(
+            //        chatId: _chatId,
+            //        text: titleText,
+            //        parseMode: ParseMode.Markdown,
+            //        disableNotification: true,
+            //        replyMarkup: new InlineKeyboardMarkup(result)
+            //);
+            //
+            //_lastSendedMessageId = sendedMessage.MessageId;
+        }
+
         public async Task SendReply(string titleText, params string[] textButtons)
         {
             _logger.LogInformation($"User: {_userName} recieved keyboard: \'{titleText}\' with buttons:{Environment.NewLine}{string.Join(Environment.NewLine, textButtons)}");
 
-            RemoveMessage();
-
             try
             {
+                await RemoveMessage();
                 await UpdateReply(titleText, textButtons);
             }
             catch (Exception ex)
@@ -103,10 +147,10 @@ namespace TelegramBot.BotCommands
         {
             _logger.LogInformation($"User: {_userName} recieved keyboard: \'{titleText}\' with buttons:{Environment.NewLine}{string.Join(Environment.NewLine, textButtons)}");
 
-            RemoveMessage();
 
             try
             {
+                await RemoveMessage();
                 await UpdateReply(titleText, textButtons);
             }
             catch (Exception ex)
@@ -127,7 +171,8 @@ namespace TelegramBot.BotCommands
                         chatId: _chatId,
                         text: titleText,
                         messageId: _lastSendedMessageId,
-                        replyMarkup: inlineKeyboard
+                        replyMarkup: inlineKeyboard,
+                        parseMode: ParseMode.Markdown
                         );
         }
 

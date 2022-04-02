@@ -1,4 +1,5 @@
 ﻿using TelegramBot.BotCommandSteps.Test.TestEditing;
+using TelegramBot.Domain.Domain.BotCommands.Common;
 
 namespace TelegramBot.BotCommands.Test
 {

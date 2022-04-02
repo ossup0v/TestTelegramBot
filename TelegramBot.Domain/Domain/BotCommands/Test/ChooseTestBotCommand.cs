@@ -1,7 +1,10 @@
 ﻿using TelegramBot.BotCommandSteps.Test.TestProcessing;
+using TelegramBot.Domain.Domain.BotCommands.Common;
 
 namespace TelegramBot.BotCommands.Test
 {
+    [NotAvailableCommand]
+
     public class ChooseTestBotCommand : IBotCommand
     {
         public Dictionary<string, string> Keys => new Dictionary<string, string>
