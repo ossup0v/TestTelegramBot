@@ -7,11 +7,13 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.OXPlay
     public sealed class PlayOXBotCommandStep : IBotCommandStep
     {
         private bool _isInited = false;
-        private OXGame _game;
-        private UserOXPlayer _userPlayer;
-        private UserOXPlayer _botPlayer;
+        private bool _isUserConnected = false;
         private int _seed = 1;
+        
+        private OXGame _game;
         private Random _random;
+        private UserOXPlayer _botPlayer;
+        private UserOXPlayer _userPlayer;
         private CommandExecutionContext _context;
 
         public Task ExecuteAsync(CommandExecutionContext context)
@@ -38,23 +40,21 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.OXPlay
                     return SendGameMap("Ждём хода игрока");
                 }
 
-                var XY = context.RawInput.Split(':');
-                var point = new Point(int.Parse(XY[0]), int.Parse(XY[1]));
+                var point = Parser.ToPoint(context.RawInput);
+
                 if (!_userPlayer.TryChoosePosition(point))
                     return Task.CompletedTask;
 
-                //if (_game.IsGameOver(out var winner))
-                //{
-                //    context.RemoveCommandStep(this);
-                //}
-
-                //while (true)
-                //{
-                //    var targetBotPoint = new Point(_random.Next(3), _random.Next(3));
-                //
-                //    if (_botPlayer.TryChoosePosition(targetBotPoint))
-                //        break;
-                //}
+                if (!_isUserConnected)
+                {
+                    while (true)
+                    {
+                        var targetBotPoint = new Point(_random.Next(3), _random.Next(3));
+                    
+                        if (_botPlayer.TryChoosePosition(targetBotPoint))
+                            break;
+                    }
+                }
             }
             catch (Exception ex) { }
 
@@ -89,8 +89,8 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.OXPlay
         private void Init()
         {
             _random = new Random(_seed);
-            _userPlayer = new UserOXPlayer(Guid.NewGuid(), "👄", true);//X
-            _botPlayer = new UserOXPlayer(Guid.NewGuid(), "💩", false);//O
+            _userPlayer = new UserOXPlayer(Guid.NewGuid(), "❌", true);//X
+            _botPlayer = new UserOXPlayer(Guid.NewGuid(), "🅾", false);//O
             _game = new OXGame(new List<OXPlayerBase>()
             {
                 _userPlayer,
@@ -110,10 +110,11 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.OXPlay
             }
 
             game.MapChanged += UpdateGameMap;
-            _userPlayer = new UserOXPlayer(Guid.NewGuid(), "💩", true);
+            _userPlayer = new UserOXPlayer(Guid.NewGuid(), "🅾", true);
             _game = game;
             _game.ReplaceBotWithUser(_userPlayer);
             SendGameMap("OX GAME");
+            _isUserConnected = true;
             return true;
         }
     }

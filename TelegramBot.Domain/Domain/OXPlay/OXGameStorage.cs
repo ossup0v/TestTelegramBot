@@ -24,5 +24,10 @@ namespace TelegramBot.Domain.Domain.OXPlay
             _games.TryGetValue(id, out var game);
             return game;
         }
+
+        public void RemoveGame(Guid id)
+        {
+            _games.Remove(id);
+        }
     }
 }

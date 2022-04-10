@@ -1,4 +1,6 @@
-﻿namespace TelegramBot.Domain.Domain.OXPlay
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace TelegramBot.Domain.Domain.OXPlay
 {
     public sealed class OXGame
     {
@@ -13,13 +15,13 @@
 
         public OXGame(List<OXPlayerBase> players)
         {
+            Id = Guid.NewGuid();
+            _map = new OXMap();
+
             _players = players;
 
             foreach (var player in players)
                 player.SetGame(this);
-
-            _map = new OXMap();
-            Id = Guid.NewGuid();
         }
 
         public bool TryChoosePosition(Point targetPoint, OXPlayerBase player)
@@ -39,7 +41,7 @@
         }
 
         public bool IsCanMove(Guid playerId)
-        { 
+        {
             return _currentPlayer.Id == playerId;
         }
 
@@ -155,6 +157,11 @@
             if (IsColumnWin(2, out winner))
                 return true;
 
+            if (LRWin(out winner))
+                return true;
+            if (RLWin(out winner))
+                return true;
+
             if (IsHaveAvailablePlace() is false)
             {
                 winner = default;
@@ -162,6 +169,34 @@
             }
 
             return false;
+        }
+
+        private bool LRWin(out string winner)
+        {
+            var firstString = _map[0, 0];
+            winner = firstString;
+
+            if (firstString == DefaultChar)
+            {
+                winner = DefaultChar;
+                return false;
+            }
+
+            return firstString == _map[1, 1] && firstString == _map[2, 2];
+        }
+
+        private bool RLWin(out string winner)
+        {
+            var firstString = _map[0, 2];
+            winner = firstString;
+
+            if (firstString == DefaultChar)
+            {
+                winner = DefaultChar;
+                return false;
+            }
+
+            return firstString == _map[1, 1] && firstString == _map[2, 0];
         }
 
         private bool IsRowWin(int column, out string winner)
@@ -232,17 +267,28 @@
             return _game.TryChoosePosition(position, this);
         }
     }
+}
 
-
-    public struct Point
+public struct Point
+{
+    public Point(int x, int y)
     {
-        public Point(int x, int y)
+        X = x;
+        Y = y;
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (obj == null || obj.GetType() != typeof(Point))
         {
-            X = x;
-            Y = y;
+            return false;
         }
 
-        public int Y;
-        public int X;
+        var point = (Point)obj;
+
+        return point.X == X && point.Y == Y;
     }
+
+    public int Y;
+    public int X;
 }
