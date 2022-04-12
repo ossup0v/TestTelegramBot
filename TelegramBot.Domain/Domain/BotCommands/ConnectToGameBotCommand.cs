@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TelegramBot.BotCommands;
+﻿using TelegramBot.BotCommands;
 using TelegramBot.Domain.Domain.BotCommands.Common;
-using TelegramBot.Domain.Domain.BotCommandSteps.OXPlay;
+using TelegramBot.Domain.Domain.BotCommandSteps;
 
-namespace TelegramBot.Domain.Domain.BotCommands.OXPlay
+namespace TelegramBot.Domain.Domain.BotCommands
 {
-    public sealed class ConnectToOXGameBotCommand : IBotCommand
+    public sealed class ConnectToGameBotCommand : IBotCommand
     {
         public Dictionary<string, string> Keys =>
             new Dictionary<string, string>
@@ -20,7 +15,7 @@ namespace TelegramBot.Domain.Domain.BotCommands.OXPlay
 
         public Task ExecuteAsync(CommandExecutionContext context)
         {
-            context.AddCommandStep(new PlayOXBotCommandStep());
+            context.AddCommandStep(new ConnectToGameBotCommandStep());
             return context.SendReply("Напишите Id игры");
         }
 

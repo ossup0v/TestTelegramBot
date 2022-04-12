@@ -5,7 +5,7 @@ namespace TelegramBot.Domain.Domain.Chess
 {
     public abstract class ChessFigureBase
     {
-        public ChessFigureBase(string mark, Guid ownerId, Point startPosition)
+        public ChessFigureBase(string mark, long ownerId, Point startPosition)
         {
             Id = Guid.NewGuid();
             OwnerId = ownerId;
@@ -14,7 +14,7 @@ namespace TelegramBot.Domain.Domain.Chess
         }
 
         public Guid Id { get; }
-        public Guid OwnerId { get; }
+        public long OwnerId { get; }
         public string Mark { get; }
         public Point Position { get; protected set; }
 
@@ -29,6 +29,9 @@ namespace TelegramBot.Domain.Domain.Chess
     public sealed class ChessGame
     {
         public Guid Id { get; }
+        public ChessPlayer BlackPlayer { get; private set; }
+        public ChessPlayer WhitePlayer { get; private set; }
+
 
         private List<ChessPlayer> _players;
         private ChessMap _map;
@@ -36,28 +39,45 @@ namespace TelegramBot.Domain.Domain.Chess
 
         public ChessGameSide GetCurrentMoveSide() => _currentMoveSide;
 
-        public ChessGame(List<ChessPlayer> players)
+        public Action<long> GameEnded = delegate { };
+        public Action GameStarted = delegate { };
+        public Action MapUpdate = delegate { };
+
+        public ChessGame(ChessPlayer whitePlayer)
         {
+            WhitePlayer = whitePlayer;
             Id = Guid.NewGuid();
-            _players = players;
-            _map = new ChessMap(players.First(p => p.Side == ChessGameSide.Black).Id, players.First(p => p.Side == ChessGameSide.White).Id);
+        }
+
+        public void ConnectPlayer(ChessPlayer blackPlayer)
+        {
+            _players = new List<ChessPlayer> { WhitePlayer, blackPlayer };
+            BlackPlayer = blackPlayer;
+
+            _map = new ChessMap(BlackPlayer.UserId, WhitePlayer.UserId);
+            GameStarted();
         }
 
         public string[,] GetDefultMap()
         {
-            return _map.GetDefualt();
+            return _map?.GetDefault() ?? new string[0, 0];
         }
 
-        public bool IsHaveTargetFigure(Guid playerId)
+        public void SurrenderGameBy(long surrenderPlayerId)
         {
-            var targetPlayer = _players.FirstOrDefault(p => p.Id == playerId);
+            GameEnded(surrenderPlayerId);
+        }
+
+        public bool IsHaveTargetFigure(long playerId)
+        {
+            var targetPlayer = _players.FirstOrDefault(p => p.UserId == playerId);
 
             return targetPlayer.ChoosedFigure != null;
         }
 
-        public string[,] TryChooseTargetFigure(Guid playerId, Point position)
+        public string[,] TryChooseTargetFigure(long playerId, Point position)
         {
-            var targetPlayer = _players.FirstOrDefault(p => p.Id == playerId);
+            var targetPlayer = _players.FirstOrDefault(p => p.UserId == playerId);
 
             var targetFigure = _map.GetFigure(position, playerId);
 
@@ -65,7 +85,7 @@ namespace TelegramBot.Domain.Domain.Chess
              || targetPlayer == null || targetPlayer.ChoosedFigure?.Id == targetFigure.Id)
             {
                 targetPlayer?.SetChoosedFigure(null);
-                return _map.GetDefualt();
+                return _map.GetDefault();
             }
 
             targetPlayer.SetChoosedFigure(targetFigure);
@@ -73,9 +93,9 @@ namespace TelegramBot.Domain.Domain.Chess
             return targetFigure.GetAllAvaiblePositionsToMove(_map);
         }
 
-        public bool TryToMoveOrChooseFigure(Guid playerId, Point wontedPosition)
+        public bool TryToMoveOrChooseFigure(long playerId, Point wontedPosition)
         {
-            var player = _players.First(_players => _players.Id == playerId);
+            var player = _players.First(_players => _players.UserId == playerId);
             var targetFigure = player.ChoosedFigure;
 
             if (targetFigure == null)
@@ -94,6 +114,7 @@ namespace TelegramBot.Domain.Domain.Chess
                 return false;
             }
 
+            MapUpdate();
             SwitchMoveSide();
             player.SetChoosedFigure(null);
             return true;
@@ -119,13 +140,13 @@ namespace TelegramBot.Domain.Domain.Chess
 
     public class ChessPlayer
     {
-        public Guid Id { get; }
+        public long UserId { get; }
         public ChessFigureBase ChoosedFigure { get; private set; }
         public ChessGameSide Side { get; set; }
 
-        public ChessPlayer(ChessGameSide side)
+        public ChessPlayer(long id, ChessGameSide side)
         {
-            Id = Guid.NewGuid();
+            UserId = id;
             Side = side;
         }
 
@@ -150,7 +171,7 @@ namespace TelegramBot.Domain.Domain.Chess
         private const int X_MAX = 8;
         private const int Y_MAX = 8;
 
-        public ChessMap(Guid playerBlackSide, Guid playerWhiteSide)
+        public ChessMap(long playerBlackSide, long playerWhiteSide)
         {
             _map = new string[Y_MAX, X_MAX];
             for (int y = 0; y < Y_MAX; y++)
@@ -189,8 +210,16 @@ namespace TelegramBot.Domain.Domain.Chess
             _figures.Add(new ElephantChessFigure(ChessMapConstants.ElephantBlackChessMark, playerBlackSide, new Point(2, 0)));
             _figures.Add(new ElephantChessFigure(ChessMapConstants.ElephantBlackChessMark, playerBlackSide, new Point(5, 0)));
 
+            _map[0, 1] = ChessMapConstants.KnightBlackChessMark;
+            _map[0, 6] = ChessMapConstants.KnightBlackChessMark;
+            _figures.Add(new KnightChessFigure(ChessMapConstants.KnightBlackChessMark, playerBlackSide, new Point(1, 0)));
+            _figures.Add(new KnightChessFigure(ChessMapConstants.KnightBlackChessMark, playerBlackSide, new Point(6, 0)));
+
             _map[0, 4] = ChessMapConstants.QueenBlackChessMark;
             _figures.Add(new QueenChessFigure(ChessMapConstants.QueenBlackChessMark, playerBlackSide, new Point(4, 0)));
+
+            _map[0, 3] = ChessMapConstants.KingBlackChessMark;
+            _figures.Add(new KingChessFigure(ChessMapConstants.KingBlackChessMark, playerBlackSide, new Point(3, 0)));
 
             //WHITE
             _map[6, 0] = ChessMapConstants.PawnWhiteChessMark;
@@ -221,19 +250,33 @@ namespace TelegramBot.Domain.Domain.Chess
             _figures.Add(new ElephantChessFigure(ChessMapConstants.ElephantWhiteChessMark, playerWhiteSide, new Point(2, 7)));
             _figures.Add(new ElephantChessFigure(ChessMapConstants.ElephantWhiteChessMark, playerWhiteSide, new Point(5, 7)));
 
+            _map[7, 1] = ChessMapConstants.KnightWhiteChessMark;
+            _map[7, 6] = ChessMapConstants.KnightWhiteChessMark;
+            _figures.Add(new KnightChessFigure(ChessMapConstants.KnightWhiteChessMark, playerWhiteSide, new Point(1, 7)));
+            _figures.Add(new KnightChessFigure(ChessMapConstants.KnightWhiteChessMark, playerWhiteSide, new Point(6, 7)));
+
             _map[7, 4] = ChessMapConstants.QueenWhiteChessMark;
             _figures.Add(new QueenChessFigure(ChessMapConstants.QueenWhiteChessMark, playerWhiteSide, new Point(4, 7)));
+
+            _map[7, 3] = ChessMapConstants.KingWhiteChessMark;
+            _figures.Add(new KingChessFigure(ChessMapConstants.KingWhiteChessMark, playerWhiteSide, new Point(3, 7)));
         }
 
         [return: MaybeNull]
-        public ChessFigureBase GetFigure(Point position, Guid onwerId)
+        public ChessFigureBase GetFigure(Point position, long onwerId)
         {
             var figureEmoji = _map[position.Y, position.X];
 
             return GetFigure(figureEmoji, onwerId, position);
         }
 
-        public string[,] GetDefualt()
+        [return: MaybeNull]
+        public ChessFigureBase GetFigure(Point position)
+        {
+            return _figures.FirstOrDefault(f => f.Position == position);
+        }
+
+        public string[,] GetDefault()
         {
             var copy = new string[_map.GetLength(0), _map.GetLength(1)];
             for (int y = 0; y < _map.GetLength(0); y++)
@@ -248,9 +291,9 @@ namespace TelegramBot.Domain.Domain.Chess
         }
 
         [return: MaybeNull]
-        private ChessFigureBase GetFigure(string emoji, Guid onwerId, Point position)
+        private ChessFigureBase GetFigure(string emoji, long onwerId, Point position)
         {
-            return _figures.FirstOrDefault(fig => fig.Mark == emoji && fig.Position.X == position.X && fig.Position.Y == position.Y /*&& fig.OwnerId == onwerId*/);
+            return _figures.FirstOrDefault(fig => fig.Mark == emoji && fig.Position.X == position.X && fig.Position.Y == position.Y && fig.OwnerId == onwerId);
         }
 
         public void MoveFigure(Guid figureId, Point from, Point to)
@@ -268,57 +311,34 @@ namespace TelegramBot.Domain.Domain.Chess
         private bool _isMoved = false;
         private readonly ChessGameSide _gameSide;
 
-        public PawnChessFigure(ChessGameSide side, string mark, Guid ownerId, Point startPosition) : base(mark, ownerId, startPosition)
+        public PawnChessFigure(ChessGameSide side, string mark, long ownerId, Point startPosition) : base(mark, ownerId, startPosition)
         {
             _gameSide = side;
         }
 
-        protected IEnumerable<Point> GetAvailablePositionsToMoveInternal()
+        protected IEnumerable<Point> GetAvailablePositionsToMoveInternal(ChessMap map)
         {
-            if (_isMoved is false)
-            {
-                if (_gameSide == ChessGameSide.Black)
-                {
-                    yield return new Point(Position.X, Position.Y + 1);
-                    yield return new Point(Position.X, Position.Y + 2);
-                }
-
-                if (_gameSide == ChessGameSide.White)
-                {
-                    yield return new Point(Position.X, Position.Y - 1);
-                    yield return new Point(Position.X, Position.Y - 2);
-                }
-            }
+            if (_gameSide == ChessGameSide.Black)
+                return ChessPositionsHelper.GetBlackPawnAvaialablePositions(Position, map, OwnerId, _isMoved);
             else
-            {
-                if (_gameSide == ChessGameSide.Black)
-                {
-                    yield return new Point(Position.X, Position.Y + 1);
-                }
-
-                if (_gameSide == ChessGameSide.White)
-                {
-                    yield return new Point(Position.X, Position.Y - 1);
-                }
-            }
+                return ChessPositionsHelper.GetWhitePawnAvaialablePositions(Position, map, OwnerId, _isMoved);
         }
 
         public override string[,] GetAllAvaiblePositionsToMove(ChessMap map)
         {
-            var defaultMap = map.GetDefualt();
-            var availablePosToMove = GetAvailablePositionsToMoveInternal();
+            var defaultMap = map.GetDefault();
+            var availablePosToMove = GetAvailablePositionsToMoveInternal(map);
 
             foreach (var pos in availablePosToMove)
-                if (defaultMap[pos.Y, pos.X] == ChessMapConstants.Empty)
-                    defaultMap[pos.Y, pos.X] = ChessMapConstants.ShowPath;
+                defaultMap[pos.Y, pos.X] = ChessMapConstants.ShowPath;
 
             return defaultMap;
         }
 
         public override bool TryMove(ChessMap map, Point wontedPosition)
         {
-            var defaultMap = map.GetDefualt();
-            if (GetAvailablePositionsToMoveInternal().Contains(wontedPosition) is false
+            var defaultMap = map.GetDefault();
+            if (GetAvailablePositionsToMoveInternal(map).Contains(wontedPosition) is false
                 || defaultMap[wontedPosition.Y, wontedPosition.X] != ChessMapConstants.Empty)
                 return false;
 
@@ -331,26 +351,26 @@ namespace TelegramBot.Domain.Domain.Chess
 
     public sealed class PawnBlackChessFigure : PawnChessFigure
     {
-        public PawnBlackChessFigure(Guid ownerId, Point startPosition)
+        public PawnBlackChessFigure(long ownerId, Point startPosition)
             : base(ChessGameSide.Black, ChessMapConstants.PawnBlackChessMark, ownerId, startPosition) { }
     }
 
     public sealed class PawnWhiteChessFigure : PawnChessFigure
     {
-        public PawnWhiteChessFigure(Guid ownerId, Point startPosition)
+        public PawnWhiteChessFigure(long ownerId, Point startPosition)
             : base(ChessGameSide.White, ChessMapConstants.PawnWhiteChessMark, ownerId, startPosition) { }
     }
 
     public sealed class RookChessFigure : ChessFigureBase
     {
-        public RookChessFigure(string mark, Guid ownerId, Point startPosition)
+        public RookChessFigure(string mark, long ownerId, Point startPosition)
             : base(mark, ownerId, startPosition) { }
 
         public override string[,] GetAllAvaiblePositionsToMove(ChessMap map)
         {
-            var result = map.GetDefualt();
+            var result = map.GetDefault();
 
-            foreach (var position in ChessPositionsHelper.GetRookAvaialablePositions(Position, map))
+            foreach (var position in ChessPositionsHelper.GetRookAvaialablePositions(Position, map, OwnerId))
                 result[position.Y, position.X] = ChessMapConstants.ShowPath;
 
             return result;
@@ -358,9 +378,9 @@ namespace TelegramBot.Domain.Domain.Chess
 
         public override bool TryMove(ChessMap map, Point wontedPosition)
         {
-            var defaultMap = map.GetDefualt();
+            var defaultMap = map.GetDefault();
 
-            if (ChessPositionsHelper.GetRookAvaialablePositions(Position, map).Contains(wontedPosition) is false
+            if (ChessPositionsHelper.GetRookAvaialablePositions(Position, map, OwnerId).Contains(wontedPosition) is false
                 || defaultMap[wontedPosition.Y, wontedPosition.X] != ChessMapConstants.Empty)
                 return false;
 
@@ -371,14 +391,14 @@ namespace TelegramBot.Domain.Domain.Chess
 
     public sealed class ElephantChessFigure : ChessFigureBase
     {
-        public ElephantChessFigure(string mark, Guid ownerId, Point startPosition)
+        public ElephantChessFigure(string mark, long ownerId, Point startPosition)
             : base(mark, ownerId, startPosition) { }
 
         public override string[,] GetAllAvaiblePositionsToMove(ChessMap map)
         {
-            var result = map.GetDefualt();
+            var result = map.GetDefault();
 
-            foreach (var position in ChessPositionsHelper.GetElephantAvaialablePositions(Position, map))
+            foreach (var position in ChessPositionsHelper.GetElephantAvaialablePositions(Position, map, OwnerId))
                 result[position.Y, position.X] = ChessMapConstants.ShowPath;
 
             return result;
@@ -386,9 +406,9 @@ namespace TelegramBot.Domain.Domain.Chess
 
         public override bool TryMove(ChessMap map, Point wontedPosition)
         {
-            var defaultMap = map.GetDefualt();
+            var defaultMap = map.GetDefault();
 
-            if (ChessPositionsHelper.GetElephantAvaialablePositions(Position, map).Contains(wontedPosition) is false
+            if (ChessPositionsHelper.GetElephantAvaialablePositions(Position, map, OwnerId).Contains(wontedPosition) is false
                 || defaultMap[wontedPosition.Y, wontedPosition.X] != ChessMapConstants.Empty)
                 return false;
 
@@ -399,14 +419,14 @@ namespace TelegramBot.Domain.Domain.Chess
 
     public sealed class QueenChessFigure : ChessFigureBase
     {
-        public QueenChessFigure(string mark, Guid ownerId, Point startPosition)
+        public QueenChessFigure(string mark, long ownerId, Point startPosition)
             : base(mark, ownerId, startPosition) { }
 
         public override string[,] GetAllAvaiblePositionsToMove(ChessMap map)
         {
-            var result = map.GetDefualt();
+            var result = map.GetDefault();
 
-            foreach (var position in ChessPositionsHelper.GetQueenAvaialablePositions(Position, map))
+            foreach (var position in ChessPositionsHelper.GetQueenAvaialablePositions(Position, map, OwnerId))
                 result[position.Y, position.X] = ChessMapConstants.ShowPath;
 
             return result;
@@ -414,10 +434,9 @@ namespace TelegramBot.Domain.Domain.Chess
 
         public override bool TryMove(ChessMap map, Point wontedPosition)
         {
-            var defaultMap = map.GetDefualt();
+            var defaultMap = map.GetDefault();
 
-            if (ChessPositionsHelper.GetQueenAvaialablePositions(Position, map).Contains(wontedPosition) is false
-                || defaultMap[wontedPosition.Y, wontedPosition.X] != ChessMapConstants.Empty)
+            if (ChessPositionsHelper.GetQueenAvaialablePositions(Position, map, OwnerId).Contains(wontedPosition) is false)
                 return false;
 
             map.MoveFigure(Id, Position, wontedPosition);
@@ -425,6 +444,59 @@ namespace TelegramBot.Domain.Domain.Chess
         }
     }
 
+    public sealed class KingChessFigure : ChessFigureBase
+    {
+        public KingChessFigure(string mark, long ownerId, Point startPosition)
+            : base(mark, ownerId, startPosition) { }
+
+        public override string[,] GetAllAvaiblePositionsToMove(ChessMap map)
+        {
+            var result = map.GetDefault();
+
+            foreach (var position in ChessPositionsHelper.GetKingAvailablePositions(Position, map, OwnerId))
+                result[position.Y, position.X] = ChessMapConstants.ShowPath;
+
+            return result;
+        }
+
+        public override bool TryMove(ChessMap map, Point wontedPosition)
+        {
+            var defaultMap = map.GetDefault();
+
+            if (ChessPositionsHelper.GetKingAvailablePositions(Position, map, OwnerId).Contains(wontedPosition) is false)
+                return false;
+
+            map.MoveFigure(Id, Position, wontedPosition);
+            return true;
+        }
+    }
+
+    public sealed class KnightChessFigure : ChessFigureBase
+    {
+        public KnightChessFigure(string mark, long ownerId, Point startPosition)
+            : base(mark, ownerId, startPosition) { }
+
+        public override string[,] GetAllAvaiblePositionsToMove(ChessMap map)
+        {
+            var result = map.GetDefault();
+
+            foreach (var position in ChessPositionsHelper.GetKnightAvailablePositions(Position, map, OwnerId))
+                result[position.Y, position.X] = ChessMapConstants.ShowPath;
+
+            return result;
+        }
+
+        public override bool TryMove(ChessMap map, Point wontedPosition)
+        {
+            var defaultMap = map.GetDefault();
+
+            if (ChessPositionsHelper.GetKnightAvailablePositions(Position, map, OwnerId).Contains(wontedPosition) is false)
+                return false;
+
+            map.MoveFigure(Id, Position, wontedPosition);
+            return true;
+        }
+    }
     public class ChessMapConstants
     {
         //black
@@ -449,16 +521,97 @@ namespace TelegramBot.Domain.Domain.Chess
 
     public static class ChessPositionsHelper
     {
-        public static List<Point> GetRookAvaialablePositions(Point source, ChessMap map)
+        public static List<Point> GetBlackPawnAvaialablePositions(Point source, ChessMap map, long ownerId, bool isMoved)
         {
-            var defualtMap = map.GetDefualt();
+            var defaultMap = map.GetDefault();
+            int x = source.X, y = source.Y;
+            int xLenght = defaultMap.GetLength(0), yLenght = defaultMap.GetLength(1);
+
+            Func<int, int, bool> checkForOut = (x, y) =>
+            {
+                return x >= 0 && y >= 0 && yLenght > y && xLenght > x;
+            };
+            var result = new List<Point>(4);
+
+
+            if (checkForOut(x, y + 1) && defaultMap[x, y + 1] == ChessMapConstants.Empty)
+            {
+                result.Add(new Point(source.X, source.Y + 1));
+
+                if (isMoved is false &&
+                    checkForOut(x, y + 2) && defaultMap[x, y + 2] == ChessMapConstants.Empty)
+                {
+                    result.Add(new Point(source.X, source.Y + 2));
+                }
+            }
+
+            var figure = map.GetFigure(new Point(x - 1, y + 1));
+            if (checkForOut(x - 1, y + 1) && (figure != null && figure.OwnerId != ownerId))
+                result.Add(new Point(source.X - 1, source.Y + 1));
+
+            figure = map.GetFigure(new Point(x + 1, y + 1));
+            if (checkForOut(x + 1, y + 1) && (figure != null && figure.OwnerId != ownerId))
+                result.Add(new Point(source.X + 1, source.Y + 1));
+
+            return result;
+        }
+
+        public static List<Point> GetWhitePawnAvaialablePositions(Point source, ChessMap map, long ownerId, bool isMoved)
+        {
+            var defaultMap = map.GetDefault();
+            int x = source.X, y = source.Y;
+            int xLenght = defaultMap.GetLength(0), yLenght = defaultMap.GetLength(1);
+
+            Func<int, int, bool> checkForOut = (x, y) =>
+            {
+                return x >= 0 && y >= 0 && yLenght > y && xLenght > x;
+            };
+            var result = new List<Point>(4);
+
+            if (checkForOut(x, y - 1) && defaultMap[x, y - 1] == ChessMapConstants.Empty)
+            {
+                result.Add(new Point(source.X, source.Y - 1));
+
+                if (isMoved is false &&
+                    checkForOut(x, y - 2) && defaultMap[x, y - 2] == ChessMapConstants.Empty)
+                {
+                    result.Add(new Point(source.X, source.Y - 2));
+                }
+            }
+
+            var figure = map.GetFigure(new Point(x - 1, y - 1));
+            if (checkForOut(x - 1, y - 1) && (figure != null && figure.OwnerId != ownerId))
+                result.Add(new Point(source.X - 1, source.Y - 1));
+
+            figure = map.GetFigure(new Point(x + 1, y - 1));
+            if (checkForOut(x + 1, y - 1) && (figure != null && figure.OwnerId != ownerId))
+                result.Add(new Point(source.X + 1, source.Y - 1));
+
+            return result;
+        }
+
+        public static List<Point> GetRookAvaialablePositions(Point source, ChessMap map, long ownerId)
+        {
+            var defualtMap = map.GetDefault();
             var result = new List<Point>(10);
 
             for (int x = source.X - 1; x >= 0; x--)
             {
                 int y = source.Y;
+
+                var figure = map.GetFigure(new Point(x, y));
                 if (defualtMap[y, x] != ChessMapConstants.Empty)
-                    break;
+                {
+                    if (figure != null && figure.OwnerId == ownerId)
+                    {
+                        break;
+                    }
+                    else if (figure != null && figure.OwnerId != ownerId)
+                    {
+                        result.Add(new Point(x, y));
+                        break;
+                    }
+                }
 
                 result.Add(new Point(x, y));
             }
@@ -466,8 +619,19 @@ namespace TelegramBot.Domain.Domain.Chess
             for (int x = source.X + 1; x < defualtMap.GetLength(0); x++)
             {
                 int y = source.Y;
+                var figure = map.GetFigure(new Point(x, y));
                 if (defualtMap[y, x] != ChessMapConstants.Empty)
-                    break;
+                {
+                    if (figure != null && figure.OwnerId == ownerId)
+                    {
+                        break;
+                    }
+                    else if (figure != null && figure.OwnerId != ownerId)
+                    {
+                        result.Add(new Point(x, y));
+                        break;
+                    }
+                }
 
                 result.Add(new Point(x, y));
             }
@@ -476,8 +640,19 @@ namespace TelegramBot.Domain.Domain.Chess
             for (int y = source.Y + 1; y < defualtMap.GetLength(0); y++)
             {
                 int x = source.X;
+                var figure = map.GetFigure(new Point(x, y));
                 if (defualtMap[y, x] != ChessMapConstants.Empty)
-                    break;
+                {
+                    if (figure != null && figure.OwnerId == ownerId)
+                    {
+                        break;
+                    }
+                    else if (figure != null && figure.OwnerId != ownerId)
+                    {
+                        result.Add(new Point(x, y));
+                        break;
+                    }
+                }
 
                 result.Add(new Point(x, y));
             }
@@ -485,8 +660,20 @@ namespace TelegramBot.Domain.Domain.Chess
             for (int y = source.Y - 1; y >= 0; y--)
             {
                 int x = source.X;
+
+                var figure = map.GetFigure(new Point(x, y));
                 if (defualtMap[y, x] != ChessMapConstants.Empty)
-                    break;
+                {
+                    if (figure != null && figure.OwnerId == ownerId)
+                    {
+                        break;
+                    }
+                    else if (figure != null && figure.OwnerId != ownerId)
+                    {
+                        result.Add(new Point(x, y));
+                        break;
+                    }
+                }
 
                 result.Add(new Point(x, y));
             }
@@ -494,39 +681,83 @@ namespace TelegramBot.Domain.Domain.Chess
             return result;
         }
 
-        public static List<Point> GetElephantAvaialablePositions(Point source, ChessMap map)
+        public static List<Point> GetElephantAvaialablePositions(Point source, ChessMap map, long ownerId)
         {
-            var defualtMap = map.GetDefualt();
+            var defualtMap = map.GetDefault();
             var result = new List<Point>(10);
 
             for (int y = source.Y + 1, x = source.X + 1; y < defualtMap.GetLength(0) && x < defualtMap.GetLength(1); y++, x++)
             {
+                var figure = map.GetFigure(new Point(x, y));
                 if (defualtMap[y, x] != ChessMapConstants.Empty)
-                    break;
+                {
+                    if (figure != null && figure.OwnerId == ownerId)
+                    {
+                        break;
+                    }
+                    else if (figure != null && figure.OwnerId != ownerId)
+                    {
+                        result.Add(new Point(x, y));
+                        break;
+                    }
+                }
 
                 result.Add(new Point(x, y));
             }
 
             for (int y = source.Y - 1, x = source.X - 1; y >= 0 && x >= 0; y--, x--)
             {
+                var figure = map.GetFigure(new Point(x, y));
                 if (defualtMap[y, x] != ChessMapConstants.Empty)
-                    break;
+                {
+                    if (figure != null && figure.OwnerId == ownerId)
+                    {
+                        break;
+                    }
+                    else if (figure != null && figure.OwnerId != ownerId)
+                    {
+                        result.Add(new Point(x, y));
+                        break;
+                    }
+                }
 
                 result.Add(new Point(x, y));
             }
 
             for (int y = source.Y - 1, x = source.X + 1; y >= 0 && x < defualtMap.GetLength(1); y--, x++)
             {
+                var figure = map.GetFigure(new Point(x, y));
                 if (defualtMap[y, x] != ChessMapConstants.Empty)
-                    break;
+                {
+                    if (figure != null && figure.OwnerId == ownerId)
+                    {
+                        break;
+                    }
+                    else if (figure != null && figure.OwnerId != ownerId)
+                    {
+                        result.Add(new Point(x, y));
+                        break;
+                    }
+                }
 
                 result.Add(new Point(x, y));
             }
 
             for (int y = source.Y + 1, x = source.X - 1; y < defualtMap.GetLength(0) && x >= 0; y++, x--)
             {
+                var figure = map.GetFigure(new Point(x, y));
                 if (defualtMap[y, x] != ChessMapConstants.Empty)
-                    break;
+                {
+                    if (figure != null && figure.OwnerId == ownerId)
+                    {
+                        break;
+                    }
+                    else if (figure != null && figure.OwnerId != ownerId)
+                    {
+                        result.Add(new Point(x, y));
+                        break;
+                    }
+                }
 
                 result.Add(new Point(x, y));
             }
@@ -534,10 +765,144 @@ namespace TelegramBot.Domain.Domain.Chess
             return result;
         }
 
-        public static List<Point> GetQueenAvaialablePositions(Point source, ChessMap map)
+        public static List<Point> GetQueenAvaialablePositions(Point source, ChessMap map, long owner)
         {
-            var result = GetElephantAvaialablePositions(source, map);
-            result.AddRange(GetRookAvaialablePositions(source, map));
+            var result = GetElephantAvaialablePositions(source, map, owner);
+            result.AddRange(GetRookAvaialablePositions(source, map, owner));
+
+            return result;
+        }
+
+        public static List<Point> GetKingAvailablePositions(Point source, ChessMap map, long ownerId)
+        {
+            var defaultMap = map.GetDefault();
+            var result = new List<Point>(4);
+
+            int x = source.X, y = source.Y;
+            int xLenght = defaultMap.GetLength(0), yLenght = defaultMap.GetLength(1);
+
+            Func<int, int, bool> checkForOut = (x, y) =>
+            {
+                return x >= 0 && y >= 0 && yLenght > y && xLenght > x;
+            };
+
+#warning FIX IT
+            int newY = y + 1, newX = x + 1;
+
+            var figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            newY = y; newX = x + 1;
+
+            figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            newY = y - 1; newX = x + 1;
+
+            figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            newY = y + 1; newX = x;
+
+            figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            newY = y - 1; newX = x;
+
+            figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            newY = y + 1; newX = x - 1;
+
+            figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            newY = y; newX = x - 1;
+
+            figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            newY = y - 1; newX = x - 1;
+
+            figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            return result;
+        }
+
+        public static List<Point> GetKnightAvailablePositions(Point source, ChessMap map, long ownerId)
+        {
+            var defaultMap = map.GetDefault();
+            var result = new List<Point>();
+
+            int x = source.X, y = source.Y;
+            int xLenght = defaultMap.GetLength(0), yLenght = defaultMap.GetLength(1);
+
+            Func<int, int, bool> checkForOut = (x, y) =>
+            {
+                return x >= 0 && y >= 0 && yLenght > y && xLenght > x;
+            };
+
+            int newY = y - 1, newX = x - 2;
+
+            var figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            newY = y - 2; newX = x - 1;
+            figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            newY = y - 2; newX = x + 1;
+
+            figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            newY = y - 1; newX = x + 2;
+
+            figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            newY = y + 1; newX = x + 2;
+
+            figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            newY = y + 2; newX = x + 1;
+
+            figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            newY = y + 2; newX = x - 1;
+
+            figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            newY = y + 1; newX = x - 2;
+
+            figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
+
+            newY = y - 2; newX = x - 1;
+
+            figure = map.GetFigure(new Point(newX, newY));
+            if (checkForOut(newX, newY) && (defaultMap[newY, newX] == ChessMapConstants.Empty || !(figure != null && figure.OwnerId == ownerId)))
+                result.Add(new Point(newX, newY));
 
             return result;
         }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TelegramBot.BotCommands;
+﻿using TelegramBot.BotCommands;
 using TelegramBot.BotCommandSteps;
 using TelegramBot.Domain.Domain.Chess;
 
@@ -16,17 +11,26 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.ChessGame
         private Chess.ChessGame _chessGame;
         private ChessPlayer _chessPlayerWhite;
         private ChessPlayer _chessPlayerBlack;
-        private ChessPlayer _currentPlayer;
         private int _moveCounter = 1;
+        private ChessGameSide _playerSide;
 
-        private void SwitchPlayer()
+        private ChessPlayer _currentPlayer() 
+        { 
+            return _playerSide == ChessGameSide.White ? _chessPlayerWhite : _chessPlayerBlack; 
+        }
+
+        public ChessGamePlayBotCommandStep() 
         {
-            if (_moveCounter % 2 == 0)
-                _currentPlayer = _chessPlayerWhite;
-            else
-                _currentPlayer = _chessPlayerBlack;
+            _playerSide = ChessGameSide.White;
+        }
 
-            _moveCounter++;
+        public ChessGamePlayBotCommandStep(CommandExecutionContext context, Guid gameId)
+        {
+            _playerSide = ChessGameSide.Black;
+            _context = context;
+
+            TryConnectGame(gameId);
+            _isInited = true;
         }
 
         public Task ExecuteAsync(CommandExecutionContext context)
@@ -41,6 +45,16 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.ChessGame
                     _isInited = true;
                 }
 
+                if (context.RawInput.Contains("draw"))
+                {
+                    return SendGameMap("Ничья!");
+                }
+
+                if (context.RawInput.Contains("surrender"))
+                {
+                    return SurrenderGame(context.RawInput);
+                }
+
                 var point = Parser.ToPoint(context.RawInput, out var result);
 
                 if (result is false)
@@ -48,19 +62,13 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.ChessGame
                     return SendGameMap();
                 }
 
-                if (_chessGame.IsHaveTargetFigure(_currentPlayer.Id) is false)
+                if (_chessGame.IsHaveTargetFigure(_currentPlayer().UserId) is false)
                 {
-                    return SendGameMap(_chessGame.TryChooseTargetFigure(_currentPlayer.Id, point));
+                    return SendGameMap(_chessGame.TryChooseTargetFigure(_currentPlayer().UserId, point));
                 }
 
-                if (_chessGame.TryToMoveOrChooseFigure(_chessPlayerWhite.Id, point))
+                if (_chessGame.TryToMoveOrChooseFigure(_currentPlayer().UserId, point))
                 {
-                    SwitchPlayer();
-                    return SendGameMap();
-                }
-                else if(_chessGame.TryToMoveOrChooseFigure(_chessPlayerBlack.Id, point))
-                {
-                    SwitchPlayer();
                     return SendGameMap();
                 }
 
@@ -69,28 +77,70 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.ChessGame
             finally { }
         }
 
-
         private string[] ToUserMap(string[,] chessMap)
         {
             var result = new List<string>(chessMap.GetLength(0) * chessMap.GetLength(1));
 
             for (int y = 0; y < chessMap.GetLength(0); y++)
-            {
                 for (int x = 0; x < chessMap.GetLength(1); x++)
-                {
                     result.Add(chessMap[y, x]);
-                }
-            }
 
             return result.ToArray();
         }
 
+        private Task SurrenderGame(string rawData)
+        {
+            if (!rawData.Contains(':'))
+                return Task.CompletedTask;
+
+            var userIdStr = rawData.Split(':')[0];
+            var userId = int.Parse(userIdStr);
+
+            var surrenderUser = userId == _chessPlayerBlack.UserId ? _chessPlayerBlack : _chessPlayerWhite;
+
+            _chessGame.SurrenderGameBy(surrenderUser.UserId);
+
+            return Task.CompletedTask;
+        }
+
+        public void SendGameEnd(long surrenderPlayerId)
+        {
+            _context.RemoveCommandStep(this);
+            var _ = surrenderPlayerId != _context.Client.UserId ? 
+                SendGameMap("🥳🥳🥳ЭТА ПАБЕДА🥳🥳🥳") : 
+                SendGameMap("💩💩💩ЭТО ПРОИГРЫШ С ПОДЛИВОЙ💩💩💩");
+        }
+
         private Task SendGameMap(string title)
         {
-            return _context.SendReply(title + Environment.NewLine + $"`{_chessGame.Id}`", 8, ToUserMap(_chessGame.GetDefultMap()));
+            if (_currentPlayer().Side == ChessGameSide.White)
+            {
+                return _context.SendReply(title + Environment.NewLine + $"`{_chessGame.Id}`", 8, ToUserMap(_chessGame.GetDefultMap()));
+            }
+            else
+            { 
+                return _context.SendMapInversed(title + Environment.NewLine + $"`{_chessGame.Id}`", 8, ToUserMap(_chessGame.GetDefultMap()));
+            }
         }
 
         private Task SendGameMap()
+        {
+            if (_currentPlayer().Side == ChessGameSide.White)
+            {
+                return SendGameInternal();
+            }
+            else
+            { 
+                return SendGameInternalInversed();
+            }
+        }
+
+        private Task SendGameInternalInversed()
+        {
+            var currentSideMove = _chessGame.GetCurrentMoveSide() == ChessGameSide.White ? "Ход белых" : "Ход черных";
+            return _context.SendMapInversed(currentSideMove + Environment.NewLine + $"`{_chessGame.Id}`", 8, ToUserMap(_chessGame.GetDefultMap()));
+        }
+        private Task SendGameInternal()
         {
             var currentSideMove = _chessGame.GetCurrentMoveSide() == ChessGameSide.White ? "Ход белых" : "Ход черных";
             return _context.SendReply(currentSideMove + Environment.NewLine + $"`{_chessGame.Id}`", 8, ToUserMap(_chessGame.GetDefultMap()));
@@ -99,16 +149,76 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.ChessGame
         private Task SendGameMap(string[,] map)
         {
             var currentSideMove = _chessGame.GetCurrentMoveSide() == ChessGameSide.White ? "Ход белых" : "Ход черных";
-            return _context.SendReply(currentSideMove + Environment.NewLine + $"`{_chessGame.Id}`", 8, ToUserMap(map));
+            if (_currentPlayer().Side == ChessGameSide.White)
+            {
+                return _context.SendReply(currentSideMove + Environment.NewLine + $"`{_chessGame.Id}`", 8, ToUserMap(map));
+            }
+            else
+            { 
+                return _context.SendMapInversed(currentSideMove + Environment.NewLine + $"`{_chessGame.Id}`", 8, ToUserMap(map));
+            }
+        }
+        
+        private void TryConnectGame(Guid gameId)
+        {
+            _chessGame = ChessGameStorage.Get(gameId);
+            _chessPlayerBlack = new ChessPlayer(_context.Client.UserId, ChessGameSide.Black);
+
+            _chessGame.ConnectPlayer(_chessPlayerBlack);
+
+            _chessPlayerWhite = _chessGame.WhitePlayer;
+
+            _chessGame.MapUpdate += OnMapUpdate;
+            _chessGame.GameEnded += SendGameEnd;
+
+            SendGameMap();
+        }
+
+        private void OnMapUpdate()
+        {
+            SendGameMap();
+        }
+
+        private void SendMapOnStart()
+        {
+            _chessPlayerBlack = _chessGame.BlackPlayer;
+            SendGameMap();
         }
 
         private void Init()
         {
-            _chessPlayerBlack = new ChessPlayer(ChessGameSide.Black);
-            _chessPlayerWhite = new ChessPlayer(ChessGameSide.White);
-            _currentPlayer = _chessPlayerWhite;
+            _chessPlayerWhite = new ChessPlayer(_context.Client.UserId, ChessGameSide.White);
 
-            _chessGame = new Chess.ChessGame(new List<ChessPlayer>() { _chessPlayerBlack, _chessPlayerWhite });
+            _chessGame = new Chess.ChessGame(_chessPlayerWhite);
+            _chessGame.GameEnded += SendGameEnd;
+            _chessGame.GameStarted += SendMapOnStart;
+            _chessGame.MapUpdate += OnMapUpdate;
+            ChessGameStorage.Add(_chessGame);
+        }
+    }
+
+    public static class ChessGameStorage
+    {
+        private static Dictionary<Guid, Chess.ChessGame> _chessGames = new Dictionary<Guid, Chess.ChessGame>();
+
+        public static void Add(Chess.ChessGame game)
+        {
+            if (_chessGames.ContainsKey(game.Id))
+                return;
+
+            _chessGames.Add(game.Id, game);
+        }
+
+        public static Chess.ChessGame Get(Guid gameId)
+        {
+            _chessGames.TryGetValue(gameId, out var game);
+         
+            return game;
+        }
+
+        public static bool Contains(Guid gameId)
+        {
+            return _chessGames.ContainsKey(gameId);
         }
     }
 }

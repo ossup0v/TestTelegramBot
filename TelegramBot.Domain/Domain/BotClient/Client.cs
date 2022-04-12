@@ -17,15 +17,17 @@ namespace TelegramBot.Domain.Domain.BotClient
         private IReadOnlyDictionary<string, IBotCommand> _availableCommands;
         public readonly Localizator Localizator;
         private string _targetLanguage = "ru";
+        public readonly long UserId;
 
-        public Client(long ownerUserId, ILogger logger, IReadOnlyDictionary<string, IBotCommand> availableCommands)
+        public Client(long userId, ILogger logger, IReadOnlyDictionary<string, IBotCommand> availableCommands)
         {
+            UserId = userId;
             _context = new CommandExecutionContext(logger);
             Localizator = new Localizator(logger, GetLanguage);
             _availableCommands = availableCommands;
-            TestManager = new CardTestManager(ownerUserId,
+            TestManager = new CardTestManager(userId,
                 TestDatabaseWrapper.Database
-                .GetAllClientTests(ownerUserId)
+                .GetAllClientTests(userId)
                 .Result
                 .Select(x => new TestCollection(x.Name,
                     x.Id,

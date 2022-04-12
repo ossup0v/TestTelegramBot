@@ -16,6 +16,15 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.OXPlay
         private UserOXPlayer _userPlayer;
         private CommandExecutionContext _context;
 
+        public PlayOXBotCommandStep() { }
+
+        public PlayOXBotCommandStep(CommandExecutionContext context, Guid gameId)
+        {
+            _context = context;
+            TryConnectGame(gameId);
+            _isInited = true;
+        }
+
         public Task ExecuteAsync(CommandExecutionContext context)
         {
             _context = context;
@@ -81,7 +90,6 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.OXPlay
                 return;
             }
 
-
             _context.RemoveCommandStep(this);
             var _ = winner == _userPlayer.PlayerChar ? SendGameMap("🥳🥳🥳ЭТА ПАБЕДА🥳🥳🥳") : SendGameMap("💩💩💩ЭТО ПРОИГРЫШ С ПОДЛИВОЙ💩💩💩");
         }
@@ -89,8 +97,8 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.OXPlay
         private void Init()
         {
             _random = new Random(_seed);
-            _userPlayer = new UserOXPlayer(Guid.NewGuid(), "❌", true);//X
-            _botPlayer = new UserOXPlayer(Guid.NewGuid(), "🅾", false);//O
+            _userPlayer = new UserOXPlayer(Guid.NewGuid(), "X", true);//X
+            _botPlayer = new UserOXPlayer(Guid.NewGuid(), "O", false);//O
             _game = new OXGame(new List<OXPlayerBase>()
             {
                 _userPlayer,
@@ -110,7 +118,7 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.OXPlay
             }
 
             game.MapChanged += UpdateGameMap;
-            _userPlayer = new UserOXPlayer(Guid.NewGuid(), "🅾", true);
+            _userPlayer = new UserOXPlayer(Guid.NewGuid(), "O", true);//O
             _game = game;
             _game.ReplaceBotWithUser(_userPlayer);
             SendGameMap("OX GAME");

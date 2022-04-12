@@ -277,6 +277,16 @@ public struct Point
         Y = y;
     }
 
+    public static bool operator ==(Point obj1, Point obj2)
+    {
+        return obj1.X == obj2.X && obj1.Y == obj2.Y;
+    }
+
+    public static bool operator !=(Point obj1, Point obj2)
+    {
+        return obj1.X != obj2.X || obj1.Y != obj2.Y;
+    }
+
     public override bool Equals(object obj)
     {
         if (obj == null || obj.GetType() != typeof(Point))

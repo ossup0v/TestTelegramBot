@@ -19,6 +19,7 @@ namespace TelegramBot.BotCommands
 
         private long _chatId => Update?.Message?.Chat?.Id ?? Update.CallbackQuery.Message.Chat.Id;
         private string _userName => Update?.Message?.Chat?.Username ?? Update?.CallbackQuery?.Message?.Chat?.Username ?? "John Doe";
+        private long _userId => Client.UserId;
         private int _userMessageId => Update?.Message?.MessageId ?? Update?.CallbackQuery?.Message?.MessageId ?? 0;
         private int _lastSendedMessageId;
 
@@ -36,15 +37,6 @@ namespace TelegramBot.BotCommands
 
             return this;
         }
-
-        //public Task SendMessage(string message)
-        //{
-        //    _logger.LogInformation($"Send message to {_chatId} - {_userName} message:" + Environment.NewLine + message);
-        //    return BotClient.SendTextMessageAsync(
-        //            chatId: _chatId,
-        //            disableNotification: true,
-        //            text: message);
-        //}
 
         public Task SendMessage(params string[] message)
         {
@@ -77,6 +69,55 @@ namespace TelegramBot.BotCommands
                     messageId: _userMessageId);
         }
 
+        public async Task SendMapInversed(string titleText, int countInRow, params string[] textButtons)
+        {
+            var temp = new List<List<InlineKeyboardButton>>(textButtons.Length / countInRow);
+            var result = new List<List<InlineKeyboardButton>>(textButtons.Length / countInRow);
+
+            var rowCount = 0;
+            var columnCount = -1;
+            foreach (var button in textButtons)
+            {
+                if (rowCount % countInRow == 0)
+                {
+                    temp.Add(new List<InlineKeyboardButton>(countInRow));
+                    columnCount++;
+                }
+
+                temp[columnCount].Add(InlineKeyboardButton.WithCallbackData(button, $"{rowCount % countInRow}:{columnCount}"));
+                rowCount++;
+            }
+
+            for (int y = temp.Count - 1, res = 0; y >= 0; y--, res++)
+            {
+                result.Add(new List<InlineKeyboardButton>());
+                result[res].AddRange(temp[y]);
+            }
+
+            result.Add(new List<InlineKeyboardButton>
+            {
+                InlineKeyboardButton.WithCallbackData("Сдаться", $"{_userId}:surrender"),
+                InlineKeyboardButton.WithCallbackData("Ничья", $"{_userId}:draw")
+            });
+
+            _logger.LogInformation($"Send message to {_chatId} - {_userName} message:" + Environment.NewLine + titleText + Environment.NewLine + "and callbacks" + Environment.NewLine + String.Join(Environment.NewLine, textButtons));
+
+            try
+            {
+                var sendedMessage = await BotClient.EditMessageTextAsync(
+                            chatId: _chatId,
+                            text: titleText,
+                            messageId: _lastSendedMessageId,
+                            replyMarkup: new InlineKeyboardMarkup(result),
+                            parseMode: ParseMode.Markdown
+                            );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+            }
+        }
+
         public async Task SendReply(string titleText, int countInRow, params string[] textButtons)
         {
             var result = new List<List<InlineKeyboardButton>>(textButtons.Length / countInRow);
@@ -95,6 +136,12 @@ namespace TelegramBot.BotCommands
                 rowCount++;
             }
 
+            result.Add(new List<InlineKeyboardButton>
+            {
+                InlineKeyboardButton.WithCallbackData("Сдаться", $"{_userId}:surrender"),
+                InlineKeyboardButton.WithCallbackData("Ничья", $"{_userId}:draw")
+            });
+
             _logger.LogInformation($"Send message to {_chatId} - {_userName} message:" + Environment.NewLine + titleText + Environment.NewLine + "and callbacks" + Environment.NewLine + String.Join(Environment.NewLine, textButtons));
 
             try
@@ -111,15 +158,6 @@ namespace TelegramBot.BotCommands
             {
                 _logger.LogError(ex.Message);
             }
-            //var sendedMessage = await BotClient.SendTextMessageAsync(
-            //        chatId: _chatId,
-            //        text: titleText,
-            //        parseMode: ParseMode.Markdown,
-            //        disableNotification: true,
-            //        replyMarkup: new InlineKeyboardMarkup(result)
-            //);
-            //
-            //_lastSendedMessageId = sendedMessage.MessageId;
         }
 
         public async Task SendReply(string titleText, params string[] textButtons)
