@@ -161,6 +161,7 @@ namespace TelegramBot.Domain.Domain.Chess
                 }
             }
 
+            //BLACK
             _map[1, 0] = ChessMapConstants.PawnBlackChessMark;
             _map[1, 1] = ChessMapConstants.PawnBlackChessMark;
             _map[1, 2] = ChessMapConstants.PawnBlackChessMark;
@@ -178,6 +179,20 @@ namespace TelegramBot.Domain.Domain.Chess
             _figures.Add(new PawnBlackChessFigure(playerBlackSide, new Point(6, 1)));
             _figures.Add(new PawnBlackChessFigure(playerBlackSide, new Point(7, 1)));
 
+            _map[0, 0] = ChessMapConstants.RookBlackChessMark;
+            _map[0, 7] = ChessMapConstants.RookBlackChessMark;
+            _figures.Add(new RookChessFigure(ChessMapConstants.RookBlackChessMark, playerBlackSide, new Point(0, 0)));
+            _figures.Add(new RookChessFigure(ChessMapConstants.RookBlackChessMark, playerBlackSide, new Point(7, 0)));
+
+            _map[0, 2] = ChessMapConstants.ElephantBlackChessMark;
+            _map[0, 5] = ChessMapConstants.ElephantBlackChessMark;
+            _figures.Add(new ElephantChessFigure(ChessMapConstants.ElephantBlackChessMark, playerBlackSide, new Point(2, 0)));
+            _figures.Add(new ElephantChessFigure(ChessMapConstants.ElephantBlackChessMark, playerBlackSide, new Point(5, 0)));
+
+            _map[0, 4] = ChessMapConstants.QueenBlackChessMark;
+            _figures.Add(new QueenChessFigure(ChessMapConstants.QueenBlackChessMark, playerBlackSide, new Point(4, 0)));
+
+            //WHITE
             _map[6, 0] = ChessMapConstants.PawnWhiteChessMark;
             _map[6, 1] = ChessMapConstants.PawnWhiteChessMark;
             _map[6, 2] = ChessMapConstants.PawnWhiteChessMark;
@@ -195,6 +210,19 @@ namespace TelegramBot.Domain.Domain.Chess
             _figures.Add(new PawnWhiteChessFigure(playerWhiteSide, new Point(6, 6)));
             _figures.Add(new PawnWhiteChessFigure(playerWhiteSide, new Point(7, 6)));
 
+            _map[7, 0] = ChessMapConstants.RookWhiteChessMark;
+            _map[7, 7] = ChessMapConstants.RookWhiteChessMark;
+            _figures.Add(new RookChessFigure(ChessMapConstants.RookWhiteChessMark, playerWhiteSide, new Point(0, 7)));
+            _figures.Add(new RookChessFigure(ChessMapConstants.RookWhiteChessMark, playerWhiteSide, new Point(7, 7)));
+
+
+            _map[7, 2] = ChessMapConstants.ElephantWhiteChessMark;
+            _map[7, 5] = ChessMapConstants.ElephantWhiteChessMark;
+            _figures.Add(new ElephantChessFigure(ChessMapConstants.ElephantWhiteChessMark, playerWhiteSide, new Point(2, 7)));
+            _figures.Add(new ElephantChessFigure(ChessMapConstants.ElephantWhiteChessMark, playerWhiteSide, new Point(5, 7)));
+
+            _map[7, 4] = ChessMapConstants.QueenWhiteChessMark;
+            _figures.Add(new QueenChessFigure(ChessMapConstants.QueenWhiteChessMark, playerWhiteSide, new Point(4, 7)));
         }
 
         [return: MaybeNull]
@@ -290,7 +318,7 @@ namespace TelegramBot.Domain.Domain.Chess
         public override bool TryMove(ChessMap map, Point wontedPosition)
         {
             var defaultMap = map.GetDefualt();
-            if (GetAvailablePositionsToMoveInternal().Contains(wontedPosition) is false 
+            if (GetAvailablePositionsToMoveInternal().Contains(wontedPosition) is false
                 || defaultMap[wontedPosition.Y, wontedPosition.X] != ChessMapConstants.Empty)
                 return false;
 
@@ -299,7 +327,6 @@ namespace TelegramBot.Domain.Domain.Chess
             _isMoved = true;
             return true;
         }
-
     }
 
     public sealed class PawnBlackChessFigure : PawnChessFigure
@@ -312,6 +339,90 @@ namespace TelegramBot.Domain.Domain.Chess
     {
         public PawnWhiteChessFigure(Guid ownerId, Point startPosition)
             : base(ChessGameSide.White, ChessMapConstants.PawnWhiteChessMark, ownerId, startPosition) { }
+    }
+
+    public sealed class RookChessFigure : ChessFigureBase
+    {
+        public RookChessFigure(string mark, Guid ownerId, Point startPosition)
+            : base(mark, ownerId, startPosition) { }
+
+        public override string[,] GetAllAvaiblePositionsToMove(ChessMap map)
+        {
+            var result = map.GetDefualt();
+
+            foreach (var position in ChessPositionsHelper.GetRookAvaialablePositions(Position, map))
+                result[position.Y, position.X] = ChessMapConstants.ShowPath;
+
+            return result;
+        }
+
+        public override bool TryMove(ChessMap map, Point wontedPosition)
+        {
+            var defaultMap = map.GetDefualt();
+
+            if (ChessPositionsHelper.GetRookAvaialablePositions(Position, map).Contains(wontedPosition) is false
+                || defaultMap[wontedPosition.Y, wontedPosition.X] != ChessMapConstants.Empty)
+                return false;
+
+            map.MoveFigure(Id, Position, wontedPosition);
+            return true;
+        }
+    }
+
+    public sealed class ElephantChessFigure : ChessFigureBase
+    {
+        public ElephantChessFigure(string mark, Guid ownerId, Point startPosition)
+            : base(mark, ownerId, startPosition) { }
+
+        public override string[,] GetAllAvaiblePositionsToMove(ChessMap map)
+        {
+            var result = map.GetDefualt();
+
+            foreach (var position in ChessPositionsHelper.GetElephantAvaialablePositions(Position, map))
+                result[position.Y, position.X] = ChessMapConstants.ShowPath;
+
+            return result;
+        }
+
+        public override bool TryMove(ChessMap map, Point wontedPosition)
+        {
+            var defaultMap = map.GetDefualt();
+
+            if (ChessPositionsHelper.GetElephantAvaialablePositions(Position, map).Contains(wontedPosition) is false
+                || defaultMap[wontedPosition.Y, wontedPosition.X] != ChessMapConstants.Empty)
+                return false;
+
+            map.MoveFigure(Id, Position, wontedPosition);
+            return true;
+        }
+    }
+
+    public sealed class QueenChessFigure : ChessFigureBase
+    {
+        public QueenChessFigure(string mark, Guid ownerId, Point startPosition)
+            : base(mark, ownerId, startPosition) { }
+
+        public override string[,] GetAllAvaiblePositionsToMove(ChessMap map)
+        {
+            var result = map.GetDefualt();
+
+            foreach (var position in ChessPositionsHelper.GetQueenAvaialablePositions(Position, map))
+                result[position.Y, position.X] = ChessMapConstants.ShowPath;
+
+            return result;
+        }
+
+        public override bool TryMove(ChessMap map, Point wontedPosition)
+        {
+            var defaultMap = map.GetDefualt();
+
+            if (ChessPositionsHelper.GetQueenAvaialablePositions(Position, map).Contains(wontedPosition) is false
+                || defaultMap[wontedPosition.Y, wontedPosition.X] != ChessMapConstants.Empty)
+                return false;
+
+            map.MoveFigure(Id, Position, wontedPosition);
+            return true;
+        }
     }
 
     public class ChessMapConstants
@@ -334,5 +445,101 @@ namespace TelegramBot.Domain.Domain.Chess
         public const string ShowPath = "*";
         public const string Empty = " ";
 
+    }
+
+    public static class ChessPositionsHelper
+    {
+        public static List<Point> GetRookAvaialablePositions(Point source, ChessMap map)
+        {
+            var defualtMap = map.GetDefualt();
+            var result = new List<Point>(10);
+
+            for (int x = source.X - 1; x >= 0; x--)
+            {
+                int y = source.Y;
+                if (defualtMap[y, x] != ChessMapConstants.Empty)
+                    break;
+
+                result.Add(new Point(x, y));
+            }
+
+            for (int x = source.X + 1; x < defualtMap.GetLength(0); x++)
+            {
+                int y = source.Y;
+                if (defualtMap[y, x] != ChessMapConstants.Empty)
+                    break;
+
+                result.Add(new Point(x, y));
+            }
+
+
+            for (int y = source.Y + 1; y < defualtMap.GetLength(0); y++)
+            {
+                int x = source.X;
+                if (defualtMap[y, x] != ChessMapConstants.Empty)
+                    break;
+
+                result.Add(new Point(x, y));
+            }
+
+            for (int y = source.Y - 1; y >= 0; y--)
+            {
+                int x = source.X;
+                if (defualtMap[y, x] != ChessMapConstants.Empty)
+                    break;
+
+                result.Add(new Point(x, y));
+            }
+
+            return result;
+        }
+
+        public static List<Point> GetElephantAvaialablePositions(Point source, ChessMap map)
+        {
+            var defualtMap = map.GetDefualt();
+            var result = new List<Point>(10);
+
+            for (int y = source.Y + 1, x = source.X + 1; y < defualtMap.GetLength(0) && x < defualtMap.GetLength(1); y++, x++)
+            {
+                if (defualtMap[y, x] != ChessMapConstants.Empty)
+                    break;
+
+                result.Add(new Point(x, y));
+            }
+
+            for (int y = source.Y - 1, x = source.X - 1; y >= 0 && x >= 0; y--, x--)
+            {
+                if (defualtMap[y, x] != ChessMapConstants.Empty)
+                    break;
+
+                result.Add(new Point(x, y));
+            }
+
+            for (int y = source.Y - 1, x = source.X + 1; y >= 0 && x < defualtMap.GetLength(1); y--, x++)
+            {
+                if (defualtMap[y, x] != ChessMapConstants.Empty)
+                    break;
+
+                result.Add(new Point(x, y));
+            }
+
+            for (int y = source.Y + 1, x = source.X - 1; y < defualtMap.GetLength(0) && x >= 0; y++, x--)
+            {
+                if (defualtMap[y, x] != ChessMapConstants.Empty)
+                    break;
+
+                result.Add(new Point(x, y));
+            }
+
+            return result;
+        }
+
+        public static List<Point> GetQueenAvaialablePositions(Point source, ChessMap map)
+        {
+            var result = GetElephantAvaialablePositions(source, map);
+            result.AddRange(GetRookAvaialablePositions(source, map));
+
+            return result;
+        }
     }
 }
