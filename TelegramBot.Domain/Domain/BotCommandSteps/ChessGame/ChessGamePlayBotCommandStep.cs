@@ -8,19 +8,26 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.ChessGame
     {
         private CommandExecutionContext _context;
         private bool _isInited = false;
+        private bool _soloGame = false;
         private Chess.ChessGame _chessGame;
         private ChessPlayer _chessPlayerWhite;
         private ChessPlayer _chessPlayerBlack;
-        private int _moveCounter = 1;
+        private int _moveCounter = 0;
         private ChessGameSide _playerSide;
 
         private ChessPlayer _currentPlayer() 
-        { 
+        {
+            if (_soloGame)
+            { 
+                return _moveCounter % 2 == 0 ? _chessPlayerWhite : _chessPlayerBlack;
+            }
+
             return _playerSide == ChessGameSide.White ? _chessPlayerWhite : _chessPlayerBlack; 
         }
 
-        public ChessGamePlayBotCommandStep() 
+        public ChessGamePlayBotCommandStep(bool soloGame) 
         {
+            _soloGame = soloGame;
             _playerSide = ChessGameSide.White;
         }
 
@@ -31,6 +38,7 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.ChessGame
 
             TryConnectGame(gameId);
             _isInited = true;
+            _soloGame = false;
         }
 
         public Task ExecuteAsync(CommandExecutionContext context)
@@ -62,19 +70,25 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.ChessGame
                     return SendGameMap();
                 }
 
-                if (_chessGame.IsHaveTargetFigure(_currentPlayer().UserId) is false)
+                if (_chessGame.IsHaveTargetFigure(_currentPlayer().UserId, _currentPlayer().Side) is false)
                 {
-                    return SendGameMap(_chessGame.TryChooseTargetFigure(_currentPlayer().UserId, point));
+                    return SendGameMap(_chessGame.TryChooseTargetFigure(_currentPlayer().UserId, _currentPlayer().Side, point));
                 }
 
-                if (_chessGame.TryToMoveOrChooseFigure(_currentPlayer().UserId, point))
+                if (_chessGame.TryToMoveOrChooseFigure(_currentPlayer().UserId, _currentPlayer().Side, point))
                 {
+                    SwitchGameSide();
                     return SendGameMap();
                 }
 
                 return SendGameMap();
             }
             finally { }
+        }
+
+        private void SwitchGameSide()
+        {
+            _moveCounter++;
         }
 
         private string[] ToUserMap(string[,] chessMap)
@@ -94,7 +108,7 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.ChessGame
                 return Task.CompletedTask;
 
             var userIdStr = rawData.Split(':')[0];
-            var userId = int.Parse(userIdStr);
+            var userId = long.Parse(userIdStr);
 
             var surrenderUser = userId == _chessPlayerBlack.UserId ? _chessPlayerBlack : _chessPlayerWhite;
 
@@ -113,7 +127,7 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.ChessGame
 
         private Task SendGameMap(string title)
         {
-            if (_currentPlayer().Side == ChessGameSide.White)
+            if (_currentPlayer().Side == ChessGameSide.White || _soloGame)
             {
                 return _context.SendReply(title + Environment.NewLine + $"`{_chessGame.Id}`", 8, ToUserMap(_chessGame.GetDefultMap()));
             }
@@ -125,7 +139,7 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.ChessGame
 
         private Task SendGameMap()
         {
-            if (_currentPlayer().Side == ChessGameSide.White)
+            if (_currentPlayer().Side == ChessGameSide.White || _soloGame)
             {
                 return SendGameInternal();
             }
@@ -149,7 +163,7 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.ChessGame
         private Task SendGameMap(string[,] map)
         {
             var currentSideMove = _chessGame.GetCurrentMoveSide() == ChessGameSide.White ? "Ход белых" : "Ход черных";
-            if (_currentPlayer().Side == ChessGameSide.White)
+            if (_currentPlayer().Side == ChessGameSide.White || _soloGame)
             {
                 return _context.SendReply(currentSideMove + Environment.NewLine + $"`{_chessGame.Id}`", 8, ToUserMap(map));
             }
@@ -168,10 +182,12 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.ChessGame
 
             _chessPlayerWhite = _chessGame.WhitePlayer;
 
-            _chessGame.MapUpdate += OnMapUpdate;
-            _chessGame.GameEnded += SendGameEnd;
-
-            SendGameMap();
+            if (!_soloGame)
+            {
+                _chessGame.MapUpdate += OnMapUpdate;
+                _chessGame.GameEnded += SendGameEnd;
+                SendGameMap();
+            }
         }
 
         private void OnMapUpdate()
@@ -194,6 +210,11 @@ namespace TelegramBot.Domain.Domain.BotCommandSteps.ChessGame
             _chessGame.GameStarted += SendMapOnStart;
             _chessGame.MapUpdate += OnMapUpdate;
             ChessGameStorage.Add(_chessGame);
+
+            if (_soloGame)
+            {
+                TryConnectGame(_chessGame.Id);
+            }
         }
     }
 
